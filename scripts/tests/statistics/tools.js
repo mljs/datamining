@@ -1,7 +1,7 @@
 require(["datamining/statistics/array-tools", "datamining/statistics/matrix-tools", "datamining/math/matrix"],function(ATools, MTools ,Matrix) {
     
     var values = [-5, 0.2, 2];
-    var matrix = [[2, -1, 5],[7, 0.5, 9]];
+    var matrix = new Matrix([[2, -1, 5],[7, 0.5, 9]]);
     
     test( "Standard deviation", function() {
         var expected = 3.6350149013908224;
@@ -49,13 +49,13 @@ require(["datamining/statistics/array-tools", "datamining/statistics/matrix-tool
         actual = ATools.median(values, false);
         equal(actual, expected, "Median of array - Even");
         
-        var matrix = [[2,-1,5],[7,1.7,9],[-4,2.5,6],[0.2,0.5,-2]];
+        var matrix = new Matrix([[2,-1,5],[7,1.7,9],[-4,2.5,6],[0.2,0.5,-2]]);
         var mean = MTools.mean(matrix);
         deepEqual(mean, [1.3000, 0.9250, 4.5000], "Matrix means");
         var median = MTools.median(matrix);
         deepEqual(median, [1.1000, 1.1000, 5.5000], "Matrix medians");
         
-        matrix = new Matrix(matrix).transpose().data;
+        matrix = matrix.transpose();
         mean = MTools.mean(matrix);
         deepEqual(mean, [2.0000, 5.8999999999999995, 1.5000, -0.43333333333333335], "Matrix transpose means");
         var median = MTools.median(matrix);
@@ -76,12 +76,12 @@ require(["datamining/statistics/array-tools", "datamining/statistics/matrix-tool
     });
     
     test( "Covariance", function() {
-        var matrix = [[4,2,0.6],[4.2,2.1,0.59],[3.9,2.0,0.58],[4.3,2.1,0.62],[4.1,2.2,0.63]];
+        var matrix = new Matrix([[4,2,0.6],[4.2,2.1,0.59],[3.9,2.0,0.58],[4.3,2.1,0.62],[4.1,2.2,0.63]]);
         var expected = [[0.025,0.007499999999999998,0.0017499999999999985],[0.007499999999999998,0.007000000000000012,0.0013500000000000025],[0.0017499999999999985,0.0013500000000000025,0.0004300000000000008]];
         var actual = MTools.covariance(matrix);
         deepEqual(actual, expected,"Covariance of matrix");
         
-        var matrix2 = new Matrix(matrix).transpose().data;
+        var matrix2 = matrix.transpose();
         actual = MTools.covariance(matrix2, 1);
         deepEqual(actual, expected,"Covariance of transpose matrix");
         

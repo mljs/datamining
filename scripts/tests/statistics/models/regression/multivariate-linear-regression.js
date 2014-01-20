@@ -11,7 +11,7 @@ require(["datamining/statistics/models/regression/multivariate-linear-regression
         
         target.regress(X, Y);
         
-        floatEqual(target.coefficients.get(0,0), eB, 0.001, "target coeff[0,0]");
+        floatEqual(target.coefficients[0][0], eB, 0.001, "target coeff[0][0]");
         floatEqual(target.intercepts[0], eA, 0.001, "target intercept[0]");
         equal(target.inputs, 1, "inputs");
         equal(target.outputs, 1, "outputs");
@@ -22,8 +22,8 @@ require(["datamining/statistics/models/regression/multivariate-linear-regression
         
         target2.regress(X1, Y);
         
-        floatEqual(target2.coefficients.get(0,0), eB, 0.001, "target2 coeff[0,0]");
-        floatEqual(target2.coefficients.get(1,0), eA, 0.001, "target2 coeff[1,0]");
+        floatEqual(target2.coefficients[0][0], eB, 0.001, "target2 coeff[0][0]");
+        floatEqual(target2.coefficients[1][0], eA, 0.001, "target2 coeff[1][0]");
         
         equal(target2.inputs, 2, "inputs 2");
         equal(target2.outputs, 1, "outputs 2");
@@ -36,12 +36,12 @@ require(["datamining/statistics/models/regression/multivariate-linear-regression
         var regression = new MLR(3, 2);
         var error = regression.regress(inputs, outputs);
         
-        floatEqual(regression.coefficients.get(0,0), 2, 1e-10, "target coeff[0,0]");
-        floatEqual(regression.coefficients.get(0,1), 3, 1e-10, "target coeff[0,1]");
-        floatEqual(regression.coefficients.get(1,0), 0, 1e-10, "target coeff[1,0]");
-        floatEqual(regression.coefficients.get(1,1), 0, 1e-10, "target coeff[1,1]");
-        floatEqual(regression.coefficients.get(2,0), 0, 1e-10, "target coeff[2,0]");
-        floatEqual(regression.coefficients.get(2,1), 0, 1e-10, "target coeff[2,1]");
+        floatEqual(regression.coefficients[0][0], 2, 1e-10, "target coeff[0][0]");
+        floatEqual(regression.coefficients[0][1], 3, 1e-10, "target coeff[0][1]");
+        floatEqual(regression.coefficients[1][0], 0, 1e-10, "target coeff[1][0]");
+        floatEqual(regression.coefficients[1][1], 0, 1e-10, "target coeff[1][1]");
+        floatEqual(regression.coefficients[2][0], 0, 1e-10, "target coeff[2][0]");
+        floatEqual(regression.coefficients[2][1], 0, 1e-10, "target coeff[2][1]");
         
         var r2 = regression.coefficientOfDetermination(inputs, outputs);
         equal(r2[0], 1, "first r2");
