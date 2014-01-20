@@ -1,5 +1,5 @@
 // https://github.com/accord-net/framework/blob/development/Sources/Accord.Statistics/Analysis/PrincipalComponentAnalysis.cs?source=cc
-define(["datamining/statistics/matrix-tools","datamining/math/matrix","datamining/math/decompositions], function(MTools, Matrix, DC){
+define(["datamining/statistics/matrix-tools","datamining/math/matrix","datamining/math/decompositions"], function(MTools, Matrix, DC){
 
     function PrincipalComponentAnalysis(data, method) {
         if(arguments.length === 0) return; // For static instanciators
@@ -7,8 +7,8 @@ define(["datamining/statistics/matrix-tools","datamining/math/matrix","dataminin
         if(!(data instanceof Matrix)) data = new Matrix(data);
                 
         this.source = data.clone();
-        this.columnMeans = MTools.mean(data.data);
-        this.columnStdDev = MTools.standardDeviation(data.data, this.columnMeans);
+        this.columnMeans = MTools.mean(data);
+        this.columnStdDev = MTools.standardDeviation(data, this.columnMeans);
         this.analysisMethod = method;
         this.sourceDimensions = data.columns;
         this.onlyCovarianceMatrixAvailable = false;
@@ -41,7 +41,7 @@ define(["datamining/statistics/matrix-tools","datamining/math/matrix","dataminin
         pca.covarianceMatrix = correlation;
         pca.analysisMethod = "standardize";
         pca.onlyCovarianceMatrixAvailable = true;
-        pca.sourceDimensions = covariance.rows;
+        pca.sourceDimensions = correlation.rows;
         
         return pca;
     }
@@ -82,10 +82,10 @@ define(["datamining/statistics/matrix-tools","datamining/math/matrix","dataminin
             for (var i = 0; i < rows; i++)
                 for (var j = 0; j < dimensions; j++)
                     for (var k = 0; k < cols; k++)
-                        r.data[i][j] += data.data[i][k] * this.eigenvectors.data[k][j];
+                        r[i][j] += data[i][k] * this.eigenvectors[k][j];
             return r;
         },
-        get numberOfComponents(threshold) {
+        numberOfComponents : function(threshold) {
             if (threshold < 0 || threshold > 1.0) throw "Threshold should be a value between 0 and 1.";
             for (var i = 0, ii = this.componentCumulative.length; i < ii; i++) {
                 if (this.componentCumulative[i] >= threshold)
@@ -93,18 +93,18 @@ define(["datamining/statistics/matrix-tools","datamining/math/matrix","dataminin
             }
             return this.componentCumulative.length;
         }
-    }
+    };
     
     function adjust(pca, matrix, inPlace) {
-        var result = MTools.center(matrix.data, pca.columnMeans, inPlace);
+        var result = MTools.center(matrix, pca.columnMeans, inPlace);
         if(pca.analysisMethod === "standardize") {
             for (var j = 0, jj = pca.columnStdDev.length; j < jj; j++)
                 if(pca.columnStdDev[j] === 0)
                     throw "Standard deviation cannot be zero (cannot standardize the constant variable at column index " + j + ").";
-            MTools.standardize(result, columnStdDev, true);
+            MTools.standardize(result, pca.columnStdDev, true);
         }
         if(inPlace)
-            return matrix;
+            return new Matrix(matrix);
         else
             return new Matrix(result);
     }
@@ -117,7 +117,7 @@ define(["datamining/statistics/matrix-tools","datamining/math/matrix","dataminin
         var sum = 0;
         for (var i = 0; i < numComponents; i++)
             sum += Math.abs(pca.eigenvalues[i]);
-        sum = (sum == 0) ? 0 : (1 / sum);
+        sum = (sum === 0) ? 0 : (1 / sum);
         
         for (var i = 0; i < numComponents; i++)
             pca.componentProportions[i] = Math.abs(pca.eigenvalues[i]) * sum;

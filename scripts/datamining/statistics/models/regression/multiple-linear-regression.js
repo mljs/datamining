@@ -34,8 +34,8 @@ define(["datamining/math/matrix","datamining/math/decompositions"],function(Matr
                 designMatrix = Matrix.empty(rows, cols + 1);
                 for(var i = 0; i < rows; i++) {
                     for(var j = 0; j < cols; j++)
-                        designMatrix.data[i][j] = inputs.data[i][j];
-                    designMatrix.data[i][cols] = 1;
+                        designMatrix[i][j] = inputs[i][j];
+                    designMatrix[i][cols] = 1;
                 }
             }
             
@@ -52,7 +52,7 @@ define(["datamining/math/matrix","datamining/math/decompositions"],function(Matr
             
             var error = 0, e;
             for(var i = 0; i < outputs.length; i++) {
-                e = outputs[i] - this.compute(inputs.data[i]);
+                e = outputs[i] - this.compute(inputs[i]);
                 error += e * e;
             }
             
@@ -73,7 +73,7 @@ define(["datamining/math/matrix","datamining/math/decompositions"],function(Matr
 
             for (var i = 0; i < outputs.length; i++)
             {
-                d = outputs[i] - this.compute(inputs.data[i]);
+                d = outputs[i] - this.compute(inputs[i]);
                 SSe += d * d;
 
                 d = outputs[i] - avg;
@@ -147,7 +147,7 @@ define(["datamining/math/matrix","datamining/math/decompositions"],function(Matr
         var output = new Array(l);
         
         for(var i = 0; i < l; i++)
-            output[i] = mlr.compute(input.data[i]);
+            output[i] = mlr.compute(input[i]);
             
         return output;
     }

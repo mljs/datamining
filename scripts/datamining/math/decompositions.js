@@ -7,12 +7,11 @@ define(["datamining/math/matrix"],function(Matrix){
             throw "Matrix is not a square matrix.";
             
         var n = matrix.columns; this.n = n;
-        var v = Matrix.zeros(n,n); this.V = v;
+        var V = Matrix.zeros(n,n); this.V = V;
         this.d = new Array(n);
         this.e = new Array(n);
         
-        var V = v.data;
-        var value = matrix.data;
+        var value = matrix;
         
         this.symmetric = matrix.isSymmetric();
         if(this.symmetric) {
@@ -25,8 +24,7 @@ define(["datamining/math/matrix"],function(Matrix){
             tql2(this);
         }
         else {
-            var h = Matrix.zeros(n, n); this.H = h;
-            var H = h.data;
+            var H = Matrix.zeros(n, n); this.H = H;
             this.ort = new Array(n);
             
             for (var j = 0; j < n; j++) {
@@ -43,7 +41,7 @@ define(["datamining/math/matrix"],function(Matrix){
         var n = evd.n;
         var d = evd.d;
         var e = evd.e;
-        var V = evd.V.data;
+        var V = evd.V;
         
         for (var j = 0; j < n; j++)
             d[j] = V[n-1][j];
@@ -146,7 +144,7 @@ define(["datamining/math/matrix"],function(Matrix){
         var n = evd.n;
         var e = evd.e;
         var d = evd.d;
-        var V = evd.V.data;
+        var V = evd.V;
         
         for (var i = 1; i < n; i++)
             e[i-1] = e[i];
@@ -250,9 +248,9 @@ define(["datamining/math/matrix"],function(Matrix){
     
     function orthes(evd) {
         var n = evd.n;
-        var H = evd.H.data;
+        var H = evd.H;
         var ort = evd.ort;
-        var V = evd.V.data
+        var V = evd.V
     
         var low = 0;
         var high = n-1;
@@ -339,8 +337,8 @@ define(["datamining/math/matrix"],function(Matrix){
         var x;
         var y;
         
-        var H = evd.H.data;
-        var V = evd.V.data;
+        var H = evd.H;
+        var V = evd.V;
         var d = evd.d;
         var e = evd.e
         
@@ -724,17 +722,16 @@ define(["datamining/math/matrix"],function(Matrix){
             var e = this.e;
             var d = this.d
             var X = Matrix.empty(n, n);
-            var x = X.data;
             for (var i = 0; i < n; i++) {
                 for (var j = 0; j < n; j++)
-                    x[i][j] = 0.0;
+                    X[i][j] = 0.0;
 
-                x[i][i] = d[i];
+                X[i][i] = d[i];
                 if (e[i] > 0) {
-                    x[i][i+1] = e[i];
+                    X[i][i+1] = e[i];
                 }
                 else if (e[i] < 0) {
-                    x[i][i-1] = e[i];
+                    X[i][i-1] = e[i];
                 }
             }
             
@@ -748,7 +745,7 @@ define(["datamining/math/matrix"],function(Matrix){
             throw "Argument has to be a Matrix";
             
         this.LU = matrix.clone();
-        var lu = this.LU.data;
+        var lu = this.LU;
         var rows = matrix.rows;
         var columns = matrix.columns;
         var pivotVector = new Array(rows);
@@ -810,7 +807,7 @@ define(["datamining/math/matrix"],function(Matrix){
     LuDecomposition.prototype = {
         isNonSingular : function() {
             var col = this.LU.columns;
-            var data = this.LU.data;
+            var data = this.LU;
             for(var j=0; j<col; j++)
                 if(data[j][j]===0)
                     return false;
@@ -819,7 +816,7 @@ define(["datamining/math/matrix"],function(Matrix){
         determinant : function() {
             if(!this.LU.isSquare())
                 throw "Matrix must be square";
-            var determinant = this.pivotSign, col = this.LU.columns, data = this.LU.data;
+            var determinant = this.pivotSign, col = this.LU.columns, data = this.LU;
             for(var j=0; j<col; j++)
                 determinant *= data[j][j];
             return determinant;
@@ -828,15 +825,15 @@ define(["datamining/math/matrix"],function(Matrix){
             var rows = this.LU.rows;
             var columns = this.LU.columns;
             var X = Matrix.empty(rows, columns);
-            var data=this.LU.data, newData=X.data;
+            var data=this.LU;
             for(var i=0; i<rows; i++) {
                 for(var j=0; j<columns; j++) {
                     if(i > j)
-                        newData[i][j] = data[i][j];
+                        X[i][j] = data[i][j];
                     else if (i===j)
-                        newData[i][j] = 1;
+                        X[i][j] = 1;
                     else
-                        newData[i][j] = 0;
+                        X[i][j] = 0;
                 }
             }
             return X;
@@ -845,13 +842,13 @@ define(["datamining/math/matrix"],function(Matrix){
             var rows = this.LU.rows;
             var columns = this.LU.columns;
             var X = Matrix.empty(rows, columns);
-            var data=this.LU.data, newData=X.data;
+            var data=this.LU;
             for(var i=0; i<rows; i++) {
                 for(var j=0; j<columns; j++) {
                     if(i <= j)
-                        newData[i][j] = data[i][j];
+                        X[i][j] = data[i][j];
                     else
-                        newData[i][j] = 0;
+                        X[i][j] = 0;
                 }
             }
             return X;
@@ -877,22 +874,22 @@ define(["datamining/math/matrix"],function(Matrix){
             var X = value.subMatrixRow(this.pivotVector, 0, count-1);
             var rows = this.LU.rows;
             var columns = this.LU.columns;
-            var lu = this.LU.data;
-            var x = X.data;
+            var lu = this.LU;
+
             for (var k = 0; k < columns; k++) {
                 for (var i = k + 1; i < columns; i++) {
                     for (var j = 0; j < count; j++) {
-                        x[i][j] -= x[k][j] * lu[i][k];
+                        X[i][j] -= X[k][j] * lu[i][k];
                     }
                 }
             }
             for (var k = columns - 1; k >= 0; k--) {
                 for (var j = 0; j < count; j++) {
-                    x[k][j] /= lu[k][k];
+                    X[k][j] /= lu[k][k];
                 }
                 for (var i = 0; i < k; i++) {
                     for (var j = 0; j < count; j++) {
-                        x[i][j] -= x[k][j] * lu[i][k];
+                        X[i][j] -= X[k][j] * lu[i][k];
                     }
                 }
             }
@@ -906,7 +903,7 @@ define(["datamining/math/matrix"],function(Matrix){
             throw "Argument has to be a Matrix";
             
         this.QR = value.clone();
-        var qr = this.QR.data;
+        var qr = this.QR;
         var m = value.rows;
         var n = value.columns;
         this.Rdiag = new Array(n);
@@ -952,28 +949,27 @@ define(["datamining/math/matrix"],function(Matrix){
             var X = value.clone();
             var m = this.QR.rows;
             var n = this.QR.columns;
-            var qr = this.QR.data;
-            var x = X.data;
+            var qr = this.QR;
             
             for(var k=0; k<n; k++) {
                 for(var j=0; j<count; j++) {
                     var s = 0.0;
                     for(var i=k; i<m; i++) {
-                        s += qr[i][k] * x[i][j];
+                        s += qr[i][k] * X[i][j];
                     }
                     s = -s / qr[k][k];
                     for(var i=k; i<m; i++) {
-                        x[i][j] += s * qr[i][k];
+                        X[i][j] += s * qr[i][k];
                     }
                 }
             }
             for(var k = n-1; k >= 0; k--) {
                 for(var j = 0; j < count; j++) {
-                    x[k][j] /= this.Rdiag[k];
+                    X[k][j] /= this.Rdiag[k];
                 }
                 for(var i = 0; i < k; i++) {
                     for(var j = 0; j < count; j++) {
-                        x[i][j] -= x[k][j] * qr[i][k];
+                        X[i][j] -= X[k][j] * qr[i][k];
                     }
                 }
             }
@@ -992,16 +988,15 @@ define(["datamining/math/matrix"],function(Matrix){
         upperTriangularFactor : function() {
             var n = this.QR.columns;
             var X = Matrix.empty(n, n);
-            var x = X.data;
-            var qr = this.QR.data;
+            var qr = this.QR;
             for(var i = 0; i < n; i++) {
                 for(var j = 0; j < n; j++) {
                     if(i < j)
-                        x[i][j] = qr[i][j];
+                        X[i][j] = qr[i][j];
                     else if (i === j)
-                        x[i][j] = this.Rdiag[i];
+                        X[i][j] = this.Rdiag[i];
                     else
-                        x[i][j] = 0.0;
+                        X[i][j] = 0.0;
                 }
             }
             return X;
@@ -1009,25 +1004,24 @@ define(["datamining/math/matrix"],function(Matrix){
         orthogonalFactor : function() {
             var rows = this.QR.rows, columns = this.QR.columns;
             var X = Matrix.empty(rows, columns);
-            var x = X.data;
-            var qr = this.QR.data;
+            var qr = this.QR;
             
             for(var k = columns - 1; k >= 0; k--) {
                 for(var i = 0; i < rows; i++) {
-                    x[i][k] = 0.0;
+                    X[i][k] = 0.0;
                 }
-                x[k][k] = 1.0;
+                X[k][k] = 1.0;
                 for(var j = k; j < columns; j++) {
                     if(qr[k][k] !== 0) {
                         var s = 0.0;
                         for(var i = k; i < rows; i++) {
-                            s += qr[i][k] * x[i][j];
+                            s += qr[i][k] * X[i][j];
                         }
                         
                         s = -s / qr[k][k];
                         
                         for(var i = k; i < rows; i++) {
-                            x[i][j] += s * qr[i][k];
+                            X[i][j] += s * qr[i][k];
                         }
                     }
                 }
@@ -1043,14 +1037,12 @@ define(["datamining/math/matrix"],function(Matrix){
         
         options = options ? options : {};
         
-        var copy = value.clone();
-        var a = copy.data;
+        var a = value.clone();
         var m = value.rows, n = value.columns;
         var nu = Math.min(m,n);
         var s = new Array(Math.min(m+1,n));
         var U = Matrix.zeros(m, nu);
         var V = Matrix.zeros(n, n);
-        var u = U.data, v = V.data;
         var e = new Array(n), work = new Array(m);
         
         var wantu = true, wantv = true;
@@ -1066,14 +1058,13 @@ define(["datamining/math/matrix"],function(Matrix){
                 console.warn("WARNING: Computing SVD on a matrix with more columns than rows.");
             }
             else {
-                copy = copy.transpose();
-                a = copy.data;
-                m = copy.rows;
-                n = copy.columns;
+                a = a.transpose();
+                m = a.rows;
+                n = a.columns;
                 swapped = true;
                 var aux = wantu;
                 wantu = wantv;
-                wantv = wantu;
+                wantv = aux;
             }
         }
         
@@ -1111,7 +1102,7 @@ define(["datamining/math/matrix"],function(Matrix){
             
             if (wantu & (k < nct)) {
                 for (var i = k; i < m; i++)
-                    u[i][k] = a[i][k];
+                    U[i][k] = a[i][k];
             }
 
             if (k < nrt) {
@@ -1141,7 +1132,7 @@ define(["datamining/math/matrix"],function(Matrix){
                 }
                 if (wantv) {
                     for (var i = k+1; i < n; i++)
-                        v[i][k] = e[i];
+                        V[i][k] = e[i];
                 }
             }
         }
@@ -1155,29 +1146,29 @@ define(["datamining/math/matrix"],function(Matrix){
         if (wantu) {
             for (var j = nct; j < nu; j++) {
                 for (var i = 0; i < m; i++) 
-                    u[i][j] = 0.0;
-                u[j][j] = 1.0;
+                    U[i][j] = 0.0;
+                U[j][j] = 1.0;
             }
             for (var k = nct-1; k >= 0; k--) {
                 if (s[k] !== 0.0) {
                     for (var j = k+1; j < nu; j++) {
                         var t = 0;
                         for (var i = k; i < m; i++) 
-                            t += u[i][k]*u[i][j];
-                        t = -t/u[k][k];
+                            t += U[i][k]*U[i][j];
+                        t = -t/U[k][k];
                         for (var i = k; i < m; i++)
-                            u[i][j] += t*u[i][k];
+                            U[i][j] += t*U[i][k];
                     }
                     for (var i = k; i < m; i++ )
-                        u[i][k] = -u[i][k];
-                    u[k][k] = 1.0 + u[k][k];
+                        U[i][k] = -U[i][k];
+                    U[k][k] = 1.0 + U[k][k];
                     for (var i = 0; i < k-1; i++) 
-                        u[i][k] = 0.0;
+                        U[i][k] = 0.0;
                 } 
                 else {
                     for (var i = 0; i < m; i++)
-                        u[i][k] = 0.0;
-                    u[k][k] = 1.0;
+                        U[i][k] = 0.0;
+                    U[k][k] = 1.0;
                 }
             }
         }
@@ -1188,15 +1179,15 @@ define(["datamining/math/matrix"],function(Matrix){
                     for (var j = k+1; j < nu; j++) {
                         var t = 0;
                         for (var i = k+1; i < n; i++) 
-                            t += v[i][k]*v[i][j];
-                        t = -t/v[k+1][k];
+                            t += V[i][k]*V[i][j];
+                        t = -t/V[k+1][k];
                         for (var i = k+1; i < n; i++)
-                            v[i][j] += t*v[i][k];
+                            V[i][j] += t*V[i][k];
                     }
                 }
                 for (var i = 0; i < n; i++) 
-                    v[i][k] = 0.0;
-                v[k][k] = 1.0;
+                    V[i][k] = 0.0;
+                V[k][k] = 1.0;
             }
         }
         
@@ -1254,9 +1245,9 @@ define(["datamining/math/matrix"],function(Matrix){
                         }
                         if (wantv) {
                             for (var i = 0; i < n; i++) {
-                                t = cs*v[i][j] + sn*v[i][p-1];
-                                v[i][p-1] = -sn*v[i][j] + cs*v[i][p-1];
-                                v[i][j] = t;
+                                t = cs*V[i][j] + sn*V[i][p-1];
+                                V[i][p-1] = -sn*V[i][j] + cs*V[i][p-1];
+                                V[i][j] = t;
                             }
                         }
                     }
@@ -1274,9 +1265,9 @@ define(["datamining/math/matrix"],function(Matrix){
                         e[j] = cs*e[j];
                         if (wantu) {
                             for (var i = 0; i < m; i++) {
-                                t = cs*u[i][j] + sn*u[i][k-1];
-                                u[i][k-1] = -sn*u[i][j] + cs*u[i][k-1];
-                                u[i][j] = t;
+                                t = cs*U[i][j] + sn*U[i][k-1];
+                                U[i][k-1] = -sn*U[i][j] + cs*U[i][k-1];
+                                U[i][j] = t;
                             }
                         }
                     }
@@ -1312,9 +1303,9 @@ define(["datamining/math/matrix"],function(Matrix){
                         s[j+1] = cs*s[j+1];
                         if (wantv) {
                             for (var i = 0; i < n; i++) {
-                                t = cs*v[i][j] + sn*v[i][j+1];
-                                v[i][j+1] = -sn*v[i][j] + cs*v[i][j+1];
-                                v[i][j] = t;
+                                t = cs*V[i][j] + sn*V[i][j+1];
+                                V[i][j+1] = -sn*V[i][j] + cs*V[i][j+1];
+                                V[i][j] = t;
                             }
                         }
                         t = hypotenuse(f, g);
@@ -1327,9 +1318,9 @@ define(["datamining/math/matrix"],function(Matrix){
                         e[j+1] = cs*e[j+1];
                         if (wantu && (j < m-1)) {
                              for (var i = 0; i < m; i++) {
-                                t = cs*u[i][j] + sn*u[i][j+1];
-                                u[i][j+1] = -sn*u[i][j] + cs*u[i][j+1];
-                                u[i][j] = t;
+                                t = cs*U[i][j] + sn*U[i][j+1];
+                                U[i][j+1] = -sn*U[i][j] + cs*U[i][j+1];
+                                U[i][j] = t;
                             }
                         }
                     }
@@ -1342,7 +1333,7 @@ define(["datamining/math/matrix"],function(Matrix){
                         s[k] = (s[k] < 0.0 ? -s[k] : 0.0);
                         if (wantv)
                             for (var i = 0; i <= pp; i++)
-                                v[i][k] = -v[i][k];
+                                V[i][k] = -V[i][k];
                     }
                     while (k < pp) {
                         if (s[k] >= s[k+1]) 
@@ -1352,15 +1343,15 @@ define(["datamining/math/matrix"],function(Matrix){
                         s[k+1] = t;
                         if (wantv && (k < n-1)) 
                             for (var i = 0; i < n; i++) {
-                                t = v[i][k+1]; 
-                                v[i][k+1] = v[i][k]; 
-                                v[i][k] = t;
+                                t = V[i][k+1]; 
+                                V[i][k+1] = V[i][k]; 
+                                V[i][k] = t;
                             }
                         if (wantu && (k < m-1)) 
                             for (var i = 0; i < m; i++) {
-                                t = u[i][k+1]; 
-                                u[i][k+1] = u[i][k]; 
-                                u[i][k] = t;
+                                t = U[i][k+1]; 
+                                U[i][k+1] = U[i][k]; 
+                                U[i][k] = t;
                             }
                         k++;
                     }
@@ -1418,8 +1409,8 @@ define(["datamining/math/matrix"],function(Matrix){
             
             for (var i = 0; i < scols; i++) {
                 if (Math.abs(this.s[i]) <= e)
-                    Ls.data[i][i] = 0;
-                else Ls.data[i][i] = 1 / this.s[i];
+                    Ls[i][i] = 0;
+                else Ls[i][i] = 1 / this.s[i];
             }
             
 
@@ -1432,8 +1423,8 @@ define(["datamining/math/matrix"],function(Matrix){
                 for (var j = 0; j < urows; j++) {
                     var sum = 0;
                     for (var k = 0; k < scols; k++)
-                        sum += VL.data[i][k] * this.U.data[j][k];
-                    VLU.data[i][j] = sum;
+                        sum += VL[i][k] * this.U[j][k];
+                    VLU[i][j] = sum;
                 }
             }
 
@@ -1454,8 +1445,8 @@ define(["datamining/math/matrix"],function(Matrix){
         var dimension = value.rows;
         this.L = Matrix.empty(dimension,dimension);
         
-        var a = value.data;
-        var l = this.L.data;
+        var a = value;
+        var l = this.L;
         
         this.positiveDefinite = true;
         this.symmetric = true;
@@ -1507,9 +1498,8 @@ define(["datamining/math/matrix"],function(Matrix){
             
             var dimension = this.L.rows;
             var count = value.columns;
-            var b = value.clone();
-            var B = b.data;
-            var l = this.L.data;
+            var B = value.clone()
+            var l = this.L;
 
             for (var k = 0; k < dimension; k++) {
                 for (var j = 0; j < count; j++) {
@@ -1529,7 +1519,7 @@ define(["datamining/math/matrix"],function(Matrix){
                 }
             }
 
-            return b;
+            return B;
         }
     };
     

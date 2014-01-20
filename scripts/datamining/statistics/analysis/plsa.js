@@ -16,10 +16,10 @@ define(["datamining/statistics/matrix-tools","datamining/math/matrix","dataminin
         this.sourceX = inputs;
         this.sourceY = outputs;
         
-        this.meanX = MTools.mean(inputs.data);
-        this.meanY = MTools.mean(outputs.data);
-        this.stdDevX = MTools.standardDeviation(inputs.data, this.meanX);
-        this.stdDevY = MTools.standardDeviation(outputs.data, this.meanY);
+        this.meanX = MTools.mean(inputs);
+        this.meanY = MTools.mean(outputs);
+        this.stdDevX = MTools.standardDeviation(inputs, this.meanX);
+        this.stdDevY = MTools.standardDeviation(outputs, this.meanY);
         
         this.inputVariables = new PartialLeastSquaresVariables(this, true);
         this.outputVariables = new PartialLeastSquaresVariables(this, false);
@@ -98,9 +98,9 @@ define(["datamining/statistics/matrix-tools","datamining/math/matrix","dataminin
             var cols = data.columns;
             if(cols > this.loadingsX.rows) throw "The data matrix should have a number of columns less than or equal to the number of rows in the loadings matrix for the input variables.";
             
-            var resultM = Matrix.zeros(rows, dimensions), result = resultM.data;
-            var sourceM = adjust(this, data, this.meanX, this.stdDevX, false), source = sourceM.data;
-            var loadingsX = this.loadingsX.data;
+            var result = Matrix.zeros(rows, dimensions);
+            var source = adjust(this, data, this.meanX, this.stdDevX, false);
+            var loadingsX = this.loadingsX;
             
             for (var i = 0; i < rows; i++)
                 for (var j = 0; j < dimensions; j++)
@@ -116,16 +116,16 @@ define(["datamining/statistics/matrix-tools","datamining/math/matrix","dataminin
             var cols = outputs.columns;
             if(cols > this.loadingsY.rows) throw "The data matrix should have a number of columns less than or equal to the number of rows in the loadings matrix for the input variables.";
             
-            var resultM = Matrix.zeros(rows, dimensions), result = resultM.data;
-            var sourceM = adjust(this, outputs, this.meanY, this.stdDevY, false), source = sourceM.data;
-            var loadingsY = this.loadingsY.data;
+            var result = Matrix.zeros(rows, dimensions);
+            var source = adjust(this, outputs, this.meanY, this.stdDevY, false);
+            var loadingsY = this.loadingsY;
             
             for (var i = 0; i < rows; i++)
                 for (var j = 0; j < dimensions; j++)
                     for (var k = 0; k < cols; k++)
                         result[i][j] += source[i][k] * loadingsY[k][j];
 
-            return resultM;
+            return result;
         },
         createRegression : function(factors) {
             if(typeof(factors)==='undefined') factors = this.factorCollection.length;
@@ -134,8 +134,8 @@ define(["datamining/statistics/matrix-tools","datamining/math/matrix","dataminin
             var xcols = this.sourceX.columns;
             var ycols = this.sourceY.columns;
 
-            var b = Matrix.zeros(xcols, ycols), B = b.data;
-            var coeffbase = this.coeffbase.data, loadingsY = this.loadingsY.data;
+            var B = Matrix.zeros(xcols, ycols);
+            var coeffbase = this.coeffbase, loadingsY = this.loadingsY;
             for (var i = 0; i < xcols; i++)
                 for (var j = 0; j < ycols; j++)
                     for (var k = 0; k < factors; k++)
@@ -155,9 +155,9 @@ define(["datamining/statistics/matrix-tools","datamining/math/matrix","dataminin
             }
             
             var toReturn;
-            //require(["datamining/statistics/models/regression/multivariate-linear-regression"],function(MLR){
-                toReturn = new MLR(b, A, true);
-            //});
+            require(["datamining/statistics/models/regression/multivariate-linear-regression"],function(MLR){
+                toReturn = new MLR(B, A, true);
+            });
             return toReturn;
         }
     };
@@ -204,7 +204,7 @@ define(["datamining/statistics/matrix-tools","datamining/math/matrix","dataminin
             
             for (var i = 0; i < rows; i++)
                 for (var j = 0, jj = w.length ; j < jj; j++)
-                    t[i] += inputsX.data[i][j] * w[j];
+                    t[i] += inputsX[i][j] * w[j];
 
             var norm_t = Norm.euclidean(t);
             for(var i = 0; i < rows; i++)
@@ -215,7 +215,7 @@ define(["datamining/statistics/matrix-tools","datamining/math/matrix","dataminin
             
             for (var i = 0; i < xcols; i++)
                 for (var j = 0; j < rows; j++)
-                    p[i] += inputsX.data[j][i] * t[j];
+                    p[i] += inputsX[j][i] * t[j];
 
             for(var i = 0, ii = w.length; i < ii; i++)
                 w[i] /= norm_t;
@@ -224,7 +224,7 @@ define(["datamining/statistics/matrix-tools","datamining/math/matrix","dataminin
             var u = new Array(rows);
             for (var i = 0; i < rows; i++)
                 for (var j = 0, jj = c.length; j < jj; j++)
-                    u[i] += outputsY.data[i][j] * c[j];
+                    u[i] += outputsY[i][j] * c[j];
 
             var v = p.slice();
 
@@ -232,19 +232,19 @@ define(["datamining/statistics/matrix-tools","datamining/math/matrix","dataminin
                 for (var j = 0; j < factor; j++) {
                     var proj = 0;
                     for (var k = 0; k < xcols; k++)
-                        proj += v[k] * V.data[k][j];
+                        proj += v[k] * V[k][j];
 
                     for (var k = 0; k < xcols; k++)
-                        v[k] -= proj * V.data[k][j];
+                        v[k] -= proj * V[k][j];
                 }
 
                 for (var j = 0; j < factor; j++) {
                     var proj = 0;
                     for (var k = 0; k < rows; k++)
-                        proj += u[k] * T.data[k][j];
+                        proj += u[k] * T[k][j];
 
                     for (var k = 0; k < rows; k++)
-                        u[k] -= proj * T.data[k][j];
+                        u[k] -= proj * T[k][j];
                 }
             }
             
@@ -259,7 +259,7 @@ define(["datamining/statistics/matrix-tools","datamining/math/matrix","dataminin
                     var d = v[i] * v[j];
 
                     for (var k = 0; k < ycols; k++)
-                        cov.data[i][k] -= d * covariance.data[j][k];
+                        cov[i][k] -= d * covariance[j][k];
                 }
             }
             covariance = cov;
@@ -295,10 +295,10 @@ define(["datamining/statistics/matrix-tools","datamining/math/matrix","dataminin
         var sumX = 0, sumY = 0;
         for (var i = 0; i < rows; i++) {
             for (var j = 0; j < xcols; j++)
-                sumX += inputsX.data[i][j] * inputsX.data[i][j];
+                sumX += inputsX[i][j] * inputsX[i][j];
 
             for (var j = 0; j < ycols; j++)
-                sumY += outputsY.data[i][j] * outputsY.data[i][j];
+                sumY += outputsY[i][j] * outputsY[i][j];
         }
 
         for (var i = 0; i < factors; i++) {
@@ -314,8 +314,8 @@ define(["datamining/statistics/matrix-tools","datamining/math/matrix","dataminin
         var xcols = plsa.sourceX.columns;
         var ycols = plsa.sourceY.columns;
 
-        var e = plsa.inputsX.clone(), E = e.data;
-        var f = plsa.outputsY.clone(), F = f.data;
+        var E = plsa.inputsX.clone();
+        var F = plsa.outputsY.clone();
 
         var T = Matrix.zeros(rows, factors);  // factor score matrix T
         var U = Matrix.zeros(rows, factors);  // factor score matrix U
@@ -331,9 +331,9 @@ define(["datamining/statistics/matrix-tools","datamining/math/matrix","dataminin
         
         for (var factor = 0; factor < factors && !stop; factor++)
         {
-            var t = e.getColumn(largest(e)).to1DArray();
+            var t = E.getColumn(largest(E)).to1DArray();
 
-            var u = f.getColumn(largest(f)).to1DArray();
+            var u = F.getColumn(largest(F)).to1DArray();
 
             var w = new Array(xcols);
             for(var i = 0; i < xcols; w[i++]=0);
@@ -444,10 +444,10 @@ define(["datamining/statistics/matrix-tools","datamining/math/matrix","dataminin
         var sumX = 0.0, sumY = 0.0;
         for (var i = 0; i < rows; i++) {
             for (var j = 0; j < xcols; j++)
-                sumX += inputsX.data[i][j] * inputsX.data[i][j];
+                sumX += inputsX[i][j] * inputsX[i][j];
 
             for (var j = 0; j < ycols; j++)
-                sumY += outputsY.data[i][j] * outputsY.data[i][j];
+                sumY += outputsY[i][j] * outputsY[i][j];
         }
 
         for (var i = 0; i < factors; i++) {
@@ -467,7 +467,7 @@ define(["datamining/statistics/matrix-tools","datamining/math/matrix","dataminin
             var SS2 = new Array(factors);
 
             for (var k = 0; k < factors; k++) {
-                var b = plsa.loadingsY.getColumn(k).data[0][0];
+                var b = plsa.loadingsY.getColumn(k)[0][0];
                 var t = plsa.scoresX.getColumn(k);
                 var w = plsa.loadingsX.getColumn(k).to1DArray();
 
@@ -485,13 +485,13 @@ define(["datamining/statistics/matrix-tools","datamining/math/matrix","dataminin
             }
             
             var sum1, sum2;
-            //require(["datamining/statistics/array-tools"],function(ATools){
+            require(["datamining/statistics/array-tools"],function(ATools){
                 sum1 = ATools.cumulativeSum(SS1);
                 sum2 = ATools.cumulativeSum(SS2);
-            //});
+            });
 
             for (var k = 0; k < factors; k++)
-                importance.data[j][k] = Math.sqrt(xcols * sum1[k] / sum2[k]);
+                importance[j][k] = Math.sqrt(xcols * sum1[k] / sum2[k]);
         }
         return importance;
     }
@@ -505,7 +505,7 @@ define(["datamining/statistics/matrix-tools","datamining/math/matrix","dataminin
     }
     
     function adjust(plsa, matrix, columnMeans, columnStdDev, inPlace) {
-        var result = MTools.center(matrix.data,columnMeans,inPlace);
+        var result = MTools.center(matrix,columnMeans,inPlace);
         if(columnStdDev !== null && plsa.analysisMethod === "standardize") {
             for (var j = 0, jj = columnStdDev.length; j < jj; j++)
                 if (columnStdDev[j] === 0) throw new ArithmeticException("Standard deviation cannot be zero (cannot standardize the constant variable at column index " + j + ").");
@@ -524,7 +524,7 @@ define(["datamining/statistics/matrix-tools","datamining/math/matrix","dataminin
         for(var i = 0; i < cols; i++) {
             var squareSum = 0;
             for(var j = 0; j < rows; j++)
-                squareSum += matrix.data[j][i] * matrix.data[j][i];
+                squareSum += matrix[j][i] * matrix[j][i];
             
             if(squareSum > max) {
                 max = squareSum;

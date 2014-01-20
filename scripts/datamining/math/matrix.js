@@ -1,6 +1,7 @@
 define(function(){
 
     function Matrix(newData) {
+        if(newData instanceof Matrix) return newData;
         var rows, columns, i;
 
         rows = newData.length;
@@ -14,11 +15,14 @@ define(function(){
                 throw "Inconsistent array dimensions";
         }
 
-        this.rows = rows;
-        this.columns = columns;
-        this.data = newData;
+        newData.rows = rows;
+        newData.columns = columns;
         
-        Object.freeze(this);
+        newData.__proto__ = Matrix.prototype;
+        
+        Object.freeze(newData);
+	return newData;
+        
     }
 
     Matrix.from1DArray = function (newRows, newColumns, newData) {
@@ -71,7 +75,7 @@ define(function(){
     Matrix.eye = function (n) {
         var matrix = Matrix.zeros(n,n);
         for(var i=0; i<matrix.rows; i++){
-            matrix.data[i][i] = 1;
+            matrix[i][i] = 1;
         }
         return matrix;
     };
@@ -80,7 +84,7 @@ define(function(){
         var l = array.length;
         var matrix = Matrix.zeros(l,l);
         for(var i=0; i<l; i++){
-            matrix.data[i][i] = array[i];
+            matrix[i][i] = array[i];
         }
         return matrix;
     };
@@ -106,7 +110,7 @@ define(function(){
             var i, j;
             for (i = 0; i < this.rows; i++) {
                 for (j = 0; j < this.columns; j++) {
-                    callback(this.data, i, j);
+                    callback(this, i, j);
                 }
             }
             return this;
@@ -114,19 +118,19 @@ define(function(){
         clone : function() {
             var l=this.rows, copy=new Array(l);
             for(var i=0; i<l; i++) {
-                copy[i] = this.data[i].slice();
+                copy[i] = this[i].slice();
             }
             return new Matrix(copy);
         },
         to1DArray : function() {
             var array = [];
             for(var i=0; i<this.rows; i++){
-                array = array.concat(this.data[i]);
+                array = array.concat(this[i]);
             }
             return array;
         },
         to2DArray : function() {
-            return this.data;
+            return this;
         },
         isRowVector : function() {
             return this.rows===1;
@@ -144,7 +148,7 @@ define(function(){
             if (this.isSquare) {
                 for (var i = 0; i < this.rows; i++) {
                     for (var j = 0; j <= i; j++) {
-                        if (this.data[i][j] != this.data[j][i]) {
+                        if (this[i][j] != this[j][i]) {
                             return false;
                         }
                     }
@@ -154,11 +158,11 @@ define(function(){
             return false;
         },
         set : function(rowIndex, columnIndex, value) {
-            this.data[rowIndex][columnIndex] = value;
+            this[rowIndex][columnIndex] = value;
             return this;
         },
         get : function(rowIndex, columnIndex) {
-            return this.data[rowIndex][columnIndex];
+            return this[rowIndex][columnIndex];
         },
         fill: function (value) {
             return this.apply(function (mat, i, j) { mat[i][j] = value; });
@@ -177,8 +181,7 @@ define(function(){
         },
         addM : function(value) {
             this.checkDimensions(value);
-            var data=value.data;
-            return this.apply(function (mat, i, j) { mat[i][j] += data[i][j]; });
+            return this.apply(function (mat, i, j) { mat[i][j] += value[i][j]; });
         },
         sub : function(value) {
             if(typeof value === "number")
@@ -191,8 +194,7 @@ define(function(){
         },
         subM : function(value) {
             this.checkDimensions(value);
-            var data=value.data;
-            return this.apply(function (mat, i, j) { mat[i][j] += data[i][j]; });
+            return this.apply(function (mat, i, j) { mat[i][j] += value[i][j]; });
         },
         mul : function(value) {
             if(typeof value === "number")
@@ -205,8 +207,7 @@ define(function(){
         },
         mulM : function(value) {
             this.checkDimensions(value);
-            var data=value.data;
-            return this.apply(function (mat, i, j) { mat[i][j] *= data[i][j]; });
+            return this.apply(function (mat, i, j) { mat[i][j] *= value[i][j]; });
         },
         div : function(value) {
             if(typeof value === "number")
@@ -219,27 +220,26 @@ define(function(){
         },
         divM : function(value) {
             this.checkDimensions(value);
-            var data=value.data;
-            return this.apply(function (mat, i, j) { mat[i][j] /= data[i][j]; });
+            return this.apply(function (mat, i, j) { mat[i][j] /= value[i][j]; });
         },
         getRow : function(index) {
             this.checkRowIndex(index);
-            return new Matrix([this.data[index]]);
+            return new Matrix([this[index]]);
         },
         setRow : function(index, array) {
             this.checkRowIndex(index);
             if(!(array instanceof Matrix)) array = Matrix.from1DArray(1,array.length,array);
             if(array.columns !== this.columns)
                 throw "Invalid row size";
-            this.data[index] = array.data[0];
+            this[index] = array[0];
             return this;
         },
         swapRows : function(row1, row2) {
             this.checkRowIndex(row1);
             this.checkRowIndex(row2);
-            var temp = data[row1], data = this.data;
-            data[row1]=data[row2];
-            data[row2]=temp;
+            var temp = this[row1];
+            this[row1]=this[row2];
+            this[row2]=temp;
             return this;
         },
         getColumn : function(index) {
@@ -247,7 +247,7 @@ define(function(){
             this.checkColumnIndex(index);
             column = new Array(this.rows);
             for(i = 0; i<this.rows; i++) {
-                column[i] = [this.data[i][index]];
+                column[i] = [this[i][index]];
             }
             return new Matrix(column);
         },
@@ -257,16 +257,16 @@ define(function(){
             if(array.rows !== this.rows)
                 throw "Invalid column size";
             for(var i=0; i<this.rows; i++) {
-                this.data[i][index] = array.data[i][0];
+                this[i][index] = array[i][0];
             }
             return this;
         },
         swapColumns : function(column1, column2) {
             this.checkRowIndex(column1);
             this.checkRowIndex(column2);
-            var l=this.rows, data=this.data, temp, row;
+            var l=this.rows, temp, row;
             for(var i=0; i<l; i++) {
-                row = data[i];
+                row = this[i];
                 temp = row[column1];
                 row[column1]=row[column2];
                 row[column2]=temp;
@@ -322,13 +322,13 @@ define(function(){
         mulRow : function(index, value) {
             checkRowIndex(index);
             for(var i=0; i<this.columns; i++) {
-                this.data[index][i] *= value;
+                this[index][i] *= value;
             }
         },
         mulColumn : function(index, value) {
             checkColumnIndex(index);
             for(var i=0; i<this.rows; i++) {
-                this.data[i][index] *= value;
+                this[i][index] *= value;
             }
         },
         max : function() {
@@ -374,7 +374,7 @@ define(function(){
         rowMins : function() {
             var mins = Matrix.empty(this.rows, 1);
             for(var i=0; i<this.rows; i++) {
-                mins.set(i,0,this.getRow(i).min());
+                mins[i][0] = this.getRow(i).min();
             }
             return mins;
         },
@@ -388,7 +388,7 @@ define(function(){
         rowMaxs : function() {
             var maxs = Matrix.empty(this.rows, 1);
             for(var i=0; i<this.rows; i++) {
-                maxs.set(i,0,this.getRow(i).max());
+                maxs[i][0] = this.getRow(i).max();
             }
             return maxs;
         },
@@ -402,7 +402,7 @@ define(function(){
         columnMins : function() {
             var mins = Matrix.empty(1, this.columns);
             for(var i=0; i<this.columns; i++) {
-                mins.set(0, i, this.getColumn(i).min());
+                mins[0][i] = this.getColumn(i).min();
             }
             return mins;
         },
@@ -416,7 +416,7 @@ define(function(){
         columnMaxs : function() {
             var maxs = Matrix.empty(1, this.columns);
             for(var i=0; i<this.columns; i++) {
-                maxs.set(0, i, this.getColumn(i).max());
+                maxs[0][i] = this.getColumn(i).max();
             }
             return maxs;
         },
@@ -432,7 +432,7 @@ define(function(){
                 throw "Only square matrices have a diagonal.";
             var diag = new Array(this.rows);
             for(var i=0; i<this.rows; i++) {
-                diag[i] = this.data[i][i];
+                diag[i] = this[i][i];
             }
             return diag;
         },
@@ -440,7 +440,7 @@ define(function(){
             if(this.rows === 1)
                 return this.clone();
             var v = Matrix.zeros(1, this.columns);
-            this.apply(function(mat,i,j){ v.data[0][j]+=mat[i][j]; });
+            this.apply(function(mat,i,j){ v[0][j]+=mat[i][j]; });
             return v;
         },
         columnMeans : function() {
@@ -450,7 +450,7 @@ define(function(){
             if(this.columns === 1)
                 return this.clone();
             var v = Matrix.zeros(this.rows, 1);
-            this.apply(function(mat,i,j){ v.data[i][0]+=mat[i][j]; });
+            this.apply(function(mat,i,j){ v[i][0]+=mat[i][j]; });
             return v;
         },
         rowMeans : function() {
@@ -492,7 +492,7 @@ define(function(){
                 vector1 = this.getRow(i);
                 for(j=0; j<newMatrix.columns; j++) {
                     vector2 = other.getColumn(j);
-                    newMatrix.data[i][j] = vector1.dot(vector2);
+                    newMatrix[i][j] = vector1.dot(vector2);
                 }
             }
             return newMatrix;
@@ -504,7 +504,7 @@ define(function(){
         },
         sortRows : function() {
             for(var i=0; i<this.rows; i++) {
-                this.data[i].sort();
+                this[i].sort();
             }
             return this;
         },
@@ -516,7 +516,7 @@ define(function(){
         },
         transpose : function() {
             var result = Matrix.empty(this.columns, this.rows);
-            this.apply(function(mat, i, j){ result.data[j][i] = mat[i][j]; });
+            this.apply(function(mat, i, j){ result[j][i] = mat[i][j]; });
             return result;
         },
         subMatrix : function(startRow, endRow, startColumn, endColumn) {
@@ -524,10 +524,9 @@ define(function(){
                 throw "Argument out of range";
             }
             var newMatrix = Matrix.empty(endRow - startRow + 1, endColumn - startColumn + 1);
-            var newData = newMatrix.data;
             for (var i = startRow; i <= endRow; i++) {
                 for (var j = startColumn; j <= endColumn; j++) {
-                    newData[i - startRow][j - startColumn] = this.data[i][j];
+                    newMatrix[i - startRow][j - startColumn] = this[i][j];
                 }
             }
             return newMatrix;
@@ -536,12 +535,11 @@ define(function(){
             if ((j0 > j1) || (j0 < 0) || (j0 >= this.columns) || (j1 < 0) || (j1 >= this.columns))
                 throw "Argument out of range.";
             var X = Matrix.empty(r.length, j1-j0+1);
-            var x = X.data;
             for (var i = 0; i < r.length; i++) {
                 for (var j = j0; j <= j1; j++) {
                     if ((r[i] < 0) || (r[i] >= this.rows))
                         throw "Argument out of range."; 
-                    x[i][j - j0] = this.data[r[i]][j];
+                    X[i][j - j0] = this[r[i]][j];
                 }
             }
             return X;
@@ -552,7 +550,7 @@ define(function(){
                 throw "The matrix is not square";
             var trace = 0;
             for(var i=0; i<this.rows; i++) {
-                trace += this.data[i][i];
+                trace += this[i][i];
             }
             return trace;
         },
@@ -561,12 +559,12 @@ define(function(){
         },
         solve : function(rightHandSide) {
             var result, self = this;
-            //require(["datamining/math/decompositions"], function (DC) {
+            require(["datamining/math/decompositions"], function (DC) {
                 result = self.isSquare() ? new DC.LuDecomposition(self).solve(rightHandSide) : new DC.QrDecomposition(self).solve(rightHandSide);
-            //});
+            });
             return result;
         },
-        get length() {
+        get size() {
             return this.rows * this.columns;
         }
     };

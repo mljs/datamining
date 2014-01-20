@@ -42,24 +42,24 @@ define(["datamining/math/decompositions","datamining/math/matrix"],function(DC,M
                     for (var j = 0; j < cols; j++) {
                         for (var k = 0; k < rows; k++) {
                             if (this.insertConstant) {
-                                var a = (i === cols - 1) ? 1 : inputs.data[k][i];
-                                var b = (j === cols - 1) ? 1 : inputs.data[k][j];
+                                var a = (i === cols - 1) ? 1 : inputs[k][i];
+                                var b = (j === cols - 1) ? 1 : inputs[k][j];
 
-                                V.data[i][j] += a * b;
+                                V[i][j] += a * b;
                             }
                             else {
-                                V.data[i][j] += inputs.data[k][i] * inputs.data[k][j];
+                                V[i][j] += inputs[k][i] * inputs[k][j];
                             }
                         }
                     }
 
                     for (var k = 0; k < rows; k++) {
                         if (this.insertConstant && (i === cols - 1)) {
-                            B[i] += outputs.data[k][c];
+                            B[i] += outputs[k][c];
                         }
                         else
                         {
-                            B[i] += inputs.data[k][i] * outputs.data[k][c];
+                            B[i] += inputs[k][i] * outputs[k][c];
                         }
                     }
                 }
@@ -69,20 +69,20 @@ define(["datamining/math/decompositions","datamining/math/matrix"],function(DC,M
                 if (this.insertConstant) {
                     this.intercepts[c] = coef[coef.length - 1];
                     for (var i = 0; i < cols - 1; i++)
-                        this.coefficients.data[i][c] = coef[i];
+                        this.coefficients[i][c] = coef[i];
                 }
                 else {
                     for (var i = 0; i < cols; i++)
-                        this.coefficients.data[i][c] = coef[i];
+                        this.coefficients[i][c] = coef[i];
                 }
             }
 
             var error = 0, e;
             for (var i = 0, ii = outputs.rows; i < ii; i++) {
-                var y = this.compute(inputs.data[i]);
+                var y = this.compute(inputs[i]);
 
                 for (var c = 0, cc = y.length; c < cc; c++) {
-                    e = outputs.data[i][c] - y[c];
+                    e = outputs[i][c] - y[c];
                     error += e * e;
                 }
             }
@@ -108,18 +108,18 @@ define(["datamining/math/decompositions","datamining/math/matrix"],function(DC,M
             
             for(var c = 0; c < M; c++) {
                 for(var i = 0; i < N; i++) {
-                    avg[c] += outputs.data[i][c];
+                    avg[c] += outputs[i][c];
                 }
                 avg[c] /= N;
             }
             
              for (var i = 0; i < N; i++) {
-                var y = this.compute(inputs.data[i]);
+                var y = this.compute(inputs[i]);
                 for (var c = 0; c < M; c++) {
-                    d = outputs.data[i][c] - y[c];
+                    d = outputs[i][c] - y[c];
                     SSe[c] += d * d;
 
-                    d = outputs.data[i][c] - avg[c];
+                    d = outputs[i][c] - avg[c];
                     SSt[c] += d * d;
                 }
             }
@@ -145,7 +145,7 @@ define(["datamining/math/decompositions","datamining/math/matrix"],function(DC,M
         },
         compute : function(input) {
             if(input instanceof Matrix)
-                return computeMatrix(this,input.data);
+                return computeMatrix(this,input);
             var N = input.length;
             var M = this.coefficients.columns;
 
@@ -154,7 +154,7 @@ define(["datamining/math/decompositions","datamining/math/matrix"],function(DC,M
                 result[i] = this.intercepts[i];
 
                 for (var j = 0; j < N; j++)
-                    result[i] += input[j] * this.coefficients.data[j][i];
+                    result[i] += input[j] * this.coefficients[j][i];
             }
 
             return result;
@@ -165,7 +165,7 @@ define(["datamining/math/decompositions","datamining/math/matrix"],function(DC,M
         var l = input.length;
         var output = new Array(l);
         for(var j = 0; j < l; j++)
-            output[j] = mlr.compute(input.data[j]);
+            output[j] = mlr.compute(input[j]);
         return output;
     }
     
