@@ -20,9 +20,7 @@ define(function(){
         
         newData.__proto__ = Matrix.prototype;
         
-        Object.freeze(newData);
 	return newData;
-        
     }
 
     Matrix.from1DArray = function (newRows, newColumns, newData) {
@@ -228,10 +226,28 @@ define(function(){
         },
         setRow : function(index, array) {
             this.checkRowIndex(index);
-            if(!(array instanceof Matrix)) array = Matrix.from1DArray(1,array.length,array);
+            if(!(array instanceof Matrix)) array = Matrix.rowVector(array);
             if(array.columns !== this.columns)
                 throw "Invalid row size";
             this[index] = array[0];
+            return this;
+        },
+        removeRow : function(index) {
+            this.checkRowIndex(index);
+            if(this.rows===1)
+                throw "A matrix cannot have less than one row";
+            this.splice(index,1);
+            this.rows -= 1;
+            return this;
+        },
+        addRow : function(index, array) {
+            if(index < 0 || index > this.rows)
+                throw "Row index out of range.";
+            if(!(array instanceof Matrix)) array = Matrix.rowVector(array);
+            if(array.columns !== this.columns)
+                throw "Invalid row size";
+            this.splice(index, 0, array[0]);
+            this.rows += 1;
             return this;
         },
         swapRows : function(row1, row2) {
@@ -253,12 +269,34 @@ define(function(){
         },
         setColumn : function(index, array) {
             this.checkColumnIndex(index);
-            if(!(array instanceof Matrix)) array = Matrix.from1DArray(array.length,1,array);
+            if(!(array instanceof Matrix)) array = Matrix.columnVector(array);
             if(array.rows !== this.rows)
                 throw "Invalid column size";
             for(var i=0; i<this.rows; i++) {
                 this[i][index] = array[i][0];
             }
+            return this;
+        },
+        removeColumn : function(index) {
+            this.checkColumnIndex(index);
+            if(this.columns===1)
+                throw "A matrix cannot have less than one column";
+            for(var i = 0, ii = this.rows; i < ii; i++) {
+                this[i].splice(index,1);
+            }
+            this.columns -= 1;
+            return this;
+        },
+        addColumn : function(index, array) {
+            if(index < 0 || index > this.columns)
+                throw "Column index out of range.";
+            if(!(array instanceof Matrix)) array = Matrix.columnVector(array);
+            if(array.rows !== this.rows)
+                throw "Invalid column size";
+            for(var i=0; i<this.rows; i++) {
+                this[i].splice(index, 0, array[i][0]);
+            }
+            this.columns += 1;
             return this;
         },
         swapColumns : function(column1, column2) {
@@ -568,6 +606,8 @@ define(function(){
             return this.rows * this.columns;
         }
     };
+    
+    Matrix.prototype.splice = Array.prototype.splice;
     
     return Matrix;
 
