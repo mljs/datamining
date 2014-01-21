@@ -1,5 +1,5 @@
 // https://github.com/accord-net/framework/blob/development/Sources/Accord.Statistics/Models/Regression/Linear/MultivariateLinearRegression.cs
-define(["datamining/math/decompositions","datamining/math/matrix"],function(DC,Matrix){
+define(["./../../../math/decompositions","./../../../math/matrix"],function(DC,Matrix){
     
     function MultivariateLinearRegression(coefficients, intercepts, insertConstant) {
         if(typeof(insertConstant)==='undefined') insertConstant = false;

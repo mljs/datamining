@@ -1,7 +1,8 @@
-define(["datamining/math/comparator"],function(Comparator){
+define(["./../math/comparator"],function(Comparator){
     
     function HClust(data, method, distanceFunction) {
         var initialDistanceMatrix = Comparator(data, distanceFunction);
+        console.log(initialDistanceMatrix)
         var evolutiveDistanceMatrix = initialDistanceMatrix.clone();
         var clusters = [];
         for(var i = 0, ii = data.length; i < ii; i++) {

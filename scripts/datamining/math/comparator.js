@@ -1,4 +1,4 @@
-define(["datamining/math/matrix"],function(Matrix){
+define(["./matrix"],function(Matrix){
     
     function distanceMatrixSymmetric(data, distanceFunction) {
         var length = data.length,

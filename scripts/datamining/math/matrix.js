@@ -597,7 +597,7 @@ define(function(){
         },
         solve : function(rightHandSide) {
             var result, self = this;
-            require(["datamining/math/decompositions"], function (DC) {
+            require(["./decompositions"], function (DC) {
                 result = self.isSquare() ? new DC.LuDecomposition(self).solve(rightHandSide) : new DC.QrDecomposition(self).solve(rightHandSide);
             });
             return result;

@@ -5,9 +5,9 @@ requirejs.config({
 require([
     "datamining/clustering/hclust","datamining/math/distance"
 ],function(HClust,Distance){
-    var data = [[1,2,3],[3,9,7],[6,2,4]];
-    var infos = [{name:"a"},{name:"b"},{name:"c"}];
-    var result = HClust.compute(data,HClust.methods.singleLinkage,Distance.squareEuclidean);
+    var data = [[1,2],[2.5,4.5],[2,2],[4,1.5],[4,2.5]];
+    var infos = [{name:"Object1"},{name:"Object2"},{name:"Object3"},{name:"Object4"},{name:"Object5"}];
+    var result = HClust.compute(data,HClust.methods.singleLinkage,Distance.euclidean);
     console.log(result);
     console.log(getTree(result,infos));
     

@@ -1,5 +1,5 @@
 // https://github.com/accord-net/framework/blob/development/Sources/Accord.Statistics/Analysis/PrincipalComponentAnalysis.cs?source=cc
-define(["datamining/statistics/matrix-tools","datamining/math/matrix","datamining/math/decompositions"], function(MTools, Matrix, DC){
+define(["./../matrix-tools","./../../math/matrix","./../../math/decompositions"], function(MTools, Matrix, DC){
 
     function PrincipalComponentAnalysis(data, method) {
         if(arguments.length === 0) return; // For static instanciators

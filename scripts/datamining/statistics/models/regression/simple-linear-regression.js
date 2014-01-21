@@ -1,5 +1,5 @@
 // https://github.com/accord-net/framework/blob/development/Sources/Accord.Statistics/Models/Regression/Linear/SimpleLinearRegression.cs
-define(["datamining/statistics/models/regression/multiple-linear-regression","datamining/math/matrix"],function(MLR,Matrix){
+define(["./multiple-linear-regression","./../../../math/matrix"],function(MLR,Matrix){
     
     function SimpleLinearRegression() {
         this.regression = new MLR(2);

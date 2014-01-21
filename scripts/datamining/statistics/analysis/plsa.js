@@ -1,5 +1,5 @@
 // https://github.com/accord-net/framework/blob/development/Sources/Accord.Statistics/Analysis/PartialLeastSquaresAnalysis.cs
-define(["datamining/statistics/matrix-tools","datamining/math/matrix","datamining/math/norm","datamining/math/decompositions"], function(MTools, Matrix, Norm, DC){
+define(["./../matrix-tools","./../../math/matrix","./../../math/norm","./../../math/decompositions"], function(MTools, Matrix, Norm, DC){
 
     function PartialLeastSquaresAnalysis(inputs, outputs, method, algorithm) {
         if(typeof(method)==='undefined') method = "center";
@@ -155,7 +155,7 @@ define(["datamining/statistics/matrix-tools","datamining/math/matrix","dataminin
             }
             
             var toReturn;
-            require(["datamining/statistics/models/regression/multivariate-linear-regression"],function(MLR){
+            require(["./../models/regression/multivariate-linear-regression"],function(MLR){
                 toReturn = new MLR(B, A, true);
             });
             return toReturn;
@@ -485,7 +485,7 @@ define(["datamining/statistics/matrix-tools","datamining/math/matrix","dataminin
             }
             
             var sum1, sum2;
-            require(["datamining/statistics/array-tools"],function(ATools){
+            require(["./../array-tools"],function(ATools){
                 sum1 = ATools.cumulativeSum(SS1);
                 sum2 = ATools.cumulativeSum(SS2);
             });

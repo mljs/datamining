@@ -1,4 +1,4 @@
-define(["datamining/math/matrix"],function(Matrix){
+define(["./matrix"],function(Matrix){
     // https://github.com/lutzroeder/Mapack/blob/master/Source/EigenvalueDecomposition.cs
     function EigenvalueDecomposition(matrix) {
         if(!(matrix instanceof Matrix))

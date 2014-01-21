@@ -1,5 +1,5 @@
 // https://github.com/accord-net/framework/blob/development/Sources/Accord.Statistics/Models/Regression/Linear/MultipleLinearRegression.cs
-define(["datamining/math/matrix","datamining/math/decompositions"],function(Matrix,DC){
+define(["./../../../math/matrix","./../../../math/decompositions"],function(Matrix,DC){
     
     function MultipleLinearRegression(inputs, intercept) {
         if(typeof(intercept)==='undefined') intercept = false;
