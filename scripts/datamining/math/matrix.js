@@ -1,16 +1,21 @@
 define(function(){
-
+    
+    /**
+     * Real matrix.
+     * @constructor
+     * @param {array} newData - A 2D array containing data for the matrix.
+     */
     function Matrix(newData) {
         if(newData instanceof Matrix) return newData;
-        var rows, columns, i;
+        var rows, columns, i = 0;
 
         rows = newData.length;
         columns = newData[0].length;
         
         if(columns===undefined)
-            throw "data must be a 2D array";
+            throw "Data must be a 2D array.";
         
-        for (i = 0; i < rows; i++) {
+        for (; i < rows; i++) {
             if (newData[i].length !== columns)
                 throw "Inconsistent array dimensions";
         }
@@ -20,69 +25,109 @@ define(function(){
         
         newData.__proto__ = Matrix.prototype;
         
-	return newData;
+        return newData;
     }
-
+    
+    /**
+     * Constructs a Matrix with the chosen dimensions from a 1D array.
+     * @param {number} newRows - Number of rows
+     * @param {number} newColumns - Number of columns
+     * @param {array} newData - A 1D array containing data for the matrix
+     */
     Matrix.from1DArray = function (newRows, newColumns, newData) {
-        var length, i, data;
+        var length, data, i = 0;
 
         length = newRows * newColumns;
         if (length !== newData.length)
-            throw "Data length does not match dimensions";
+            throw "Data length does not match given dimensions.";
 
         data = new Array(newRows);
-        for (i = 0; i < newRows; i++) {
+        for (; i < newRows; i++) {
             data[i] = newData.slice(i*newColumns,(i+1)*newColumns);
         }
         return new Matrix(data);
     };
     
-    Matrix.rowVector = function (array) {
-        return new Matrix([array]);
+    /**
+     * Creates a row vector, a matrix with only one row.
+     * @param {array} newData - A 1D array containing data for the vector
+     */
+    Matrix.rowVector = function (newData) {
+        return new Matrix([newData]);
     };
     
-    Matrix.columnVector = function (array) {
-        var vector = new Array(array.length);
-        for(var i = 0, ii = array.length; i < ii; i++)
-            vector[i] = [array[i]];
+    /**
+     * Creates a column vector, a matrix with only one column.
+     * @param {array} newData - A 1D array containing data for the vector
+     */
+    Matrix.columnVector = function (newData) {
+        var l = newData.length, vector = new Array(l);
+        for(var i = 0; i < l; i++)
+            vector[i] = [newData[i]];
         return new Matrix(vector);
     };
 
+    /**
+     * Creates an empty matrix with the given dimensions. Values will be undefined.
+     * @param {number} rows - Number of rows
+     * @param {number} columns - Number of columns
+     */
     Matrix.empty = function (rows, columns) {
         var array = new Array(rows);
-        for(var i=0; i<rows; i++) {
+        for(var i = 0; i < rows; i++) {
             array[i] = new Array(columns);
         }
         return new Matrix(array);
     };
 
+    /**
+     * Creates a matrix with the given dimensions. Values will be set to zero.
+     * @param {number} rows - Number of rows
+     * @param {number} columns - Number of columns
+     */
     Matrix.zeros = function (rows, columns) {
-        return Matrix.empty(rows,columns).fill(0);
+        return Matrix.empty(rows, columns).fill(0);
     };
 
+    /**
+     * Creates a matrix with the given dimensions. Values will be set to one.
+     * @param {number} rows - Number of rows
+     * @param {number} columns - Number of columns
+     */
     Matrix.ones = function (rows, columns) {
-        return Matrix.empty(rows,columns).fill(1);
+        return Matrix.empty(rows, columns).fill(1);
     };
 
+    /**
+     * Creates a matrix with the given dimensions. Values will be randomly set using Math.random().
+     * @param {number} rows - Number of rows
+     * @param {number} columns - Number of columns
+     */
     Matrix.rand = function (rows, columns) {
-        var array = new Array(rows*columns);
-        var matrix = Matrix.from1DArray(rows, columns, array);
-        return matrix.apply(function (mat, i, j) { mat[i][j] = Math.random(); });
+        var matrix = Matrix.empty(rows, columns);
+        return matrix.apply(function (i, j) { this[i][j] = Math.random(); });
     };
 
+    /**
+     * Creates an identity matrix with the given dimension. Values of the diagonal will be 1 and other will be 0;
+     * @param {number} n - Number of rows and columns
+     */
     Matrix.eye = function (n) {
-        var matrix = Matrix.zeros(n,n);
-        for(var i=0; i<matrix.rows; i++){
+        var matrix = Matrix.zeros(n, n), l = matrix.rows;
+        for(var i = 0; i < l; i++){
             matrix[i][i] = 1;
         }
         return matrix;
     };
 
-    Matrix.diag = function (array) {
-        var l = array.length;
-        var matrix = Matrix.zeros(l,l);
-        for(var i=0; i<l; i++){
-            matrix[i][i] = array[i];
+    /**
+     * Creates a diagonal matrix based on the given array. 
+     * @param {array} data - Array containing the data for the diagonal
+     */
+    Matrix.diag = function (data) {
+        var l = data.length, matrix = Matrix.zeros(l,l);
+        for(var i = 0; i < l; i++){
+            matrix[i][i] = data[i];
         }
         return matrix;
     };
@@ -104,49 +149,78 @@ define(function(){
             if(this.columns !== otherMatrix.rows)
                 throw "Number of columns of left matrix must be equal to number of rows of right matrix.";
         },
+        /**
+         * Applies a callback for each element of the matrix. 
+         * @param {function} callback - Function that will be called with two parameters : i (index of the row) and j (index of the column)
+         */
         apply: function (callback) {
-            var i, j;
-            for (i = 0; i < this.rows; i++) {
-                for (j = 0; j < this.columns; j++) {
-                    callback(this, i, j);
+            var ii = this.rows, jj = this.columns;
+            for (var i = 0; i < ii; i++) {
+                for (var j = 0; j < jj; j++) {
+                    callback.call(this, i, j);
                 }
             }
             return this;
         },
+        /**
+         * Creates an exact and independent copy of the matrix
+         */
         clone : function() {
-            var l=this.rows, copy=new Array(l);
-            for(var i=0; i<l; i++) {
-                copy[i] = this[i].slice();
-            }
-            return new Matrix(copy);
+            return new Matrix(this.to2DArray());
         },
+        /**
+         * Returns a new 1D array filled row by row with the matrix values
+         */
         to1DArray : function() {
-            var array = [];
-            for(var i=0; i<this.rows; i++){
+            var array = [], l = this.rows;
+            for(var i = 0; i < l; i++){
                 array = array.concat(this[i]);
             }
             return array;
         },
+        /**
+         * Returns a 2D array containing the data
+         */
         to2DArray : function() {
-            return this;
+            var l = this.rows, copy = new Array(l);
+            for(var i = 0; i < l; i++) {
+                copy[i] = this[i].slice();
+            }
+            return copy;
         },
+        /**
+         * Returns true if the matrix has one row
+         */
         isRowVector : function() {
-            return this.rows===1;
+            return this.rows === 1;
         },
+        /**
+         * Returns true if the matrix has one column
+         */
         isColumnVector : function() {
-            return this.columns===1;
+            return this.columns === 1;
         },
+        /**
+         * Returns true if the matrix has one row or one column
+         */
         isVector : function() {
-            return (this.rows===1)||(this.columns===1);
+            return (this.rows === 1) || (this.columns === 1);
         },
+        /**
+         * Returns true if the matrix has the same number of rows and columns
+         */
         isSquare : function() {
-            return this.rows===this.columns;
+            return this.rows === this.columns;
         },
+        /**
+         * Returns true if the matrix has the same values on both sides of the diagonal
+         */
         isSymmetric : function() {
-            if (this.isSquare) {
-                for (var i = 0; i < this.rows; i++) {
+            if (this.isSquare()) {
+                var l = this.rows
+                for (var i = 0; i < l; i++) {
                     for (var j = 0; j <= i; j++) {
-                        if (this[i][j] != this[j][i]) {
+                        if (this[i][j] !== this[j][i]) {
                             return false;
                         }
                     }
@@ -155,16 +229,33 @@ define(function(){
             }
             return false;
         },
+        /**
+         * Sets a given element of the matrix. mat.set(3,4,1) is equivalent to matrix[3][4]=1
+         * @param {number} rowIndex - Index of the row
+         * @param {number} columnIndex - Index of the column
+         */
         set : function(rowIndex, columnIndex, value) {
             this[rowIndex][columnIndex] = value;
             return this;
         },
+        /**
+         * Gets a given element of the matrix. mat.get(3,4) is equivalent to matrix[3][4]
+         * @param {number} rowIndex - Index of the row
+         * @param {number} columnIndex - Index of the column
+         */
         get : function(rowIndex, columnIndex) {
             return this[rowIndex][columnIndex];
         },
+        /**
+         * Fills the matrix with a given value. All elements will be set to this value.
+         * @param {number} value - New value
+         */
         fill: function (value) {
-            return this.apply(function (mat, i, j) { mat[i][j] = value; });
+            return this.apply(function (i, j) { this[i][j] = value; });
         },
+        /**
+         * Negate the matrix. All elements will be multiplied by (-1)
+         */
         neg : function () {
             return this.mulS(-1);
         },
