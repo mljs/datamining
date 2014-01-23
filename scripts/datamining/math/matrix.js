@@ -1,4 +1,6 @@
 define(function(){
+
+    var Asplice = Array.prototype.splice;
     
     /**
      * Real matrix.
@@ -133,6 +135,7 @@ define(function(){
     };
 
     Matrix.prototype = {
+        /* Internal methods */
         checkRowIndex : function(index) {
             if(index < 0 || index > this.rows-1)
                 throw "Row index out of range.";
@@ -233,6 +236,7 @@ define(function(){
          * Sets a given element of the matrix. mat.set(3,4,1) is equivalent to matrix[3][4]=1
          * @param {number} rowIndex - Index of the row
          * @param {number} columnIndex - Index of the column
+         * @param {value} value - The new value for the element
          */
         set : function(rowIndex, columnIndex, value) {
             this[rowIndex][columnIndex] = value;
@@ -259,6 +263,11 @@ define(function(){
         neg : function () {
             return this.mulS(-1);
         },
+        /**
+         * Adds a scalar or values from another Matrix (in place)
+         * @param {number|Matrix} value
+         * @returns {this}
+         */
         add : function(value) {
             if(typeof value === "number")
                 return this.addS(value);
@@ -266,12 +275,17 @@ define(function(){
                 return this.addM(value);
         },
         addS : function(value) {
-            return this.apply(function (mat, i, j) { mat[i][j] += value; });
+            return this.apply(function (i, j) { this[i][j] += value; });
         },
         addM : function(value) {
             this.checkDimensions(value);
-            return this.apply(function (mat, i, j) { mat[i][j] += value[i][j]; });
+            return this.apply(function (i, j) { this[i][j] += value[i][j]; });
         },
+        /**
+         * Substracts a scalar or values from another Matrix (in place)
+         * @param {number|Matrix} value
+         * @returns {this}
+         */
         sub : function(value) {
             if(typeof value === "number")
                 return this.subS(value);
@@ -279,12 +293,17 @@ define(function(){
                 return this.subM(value);
         },
         subS : function(value) {
-            return this.apply(function (mat, i, j) { mat[i][j] -= value; });
+            return this.apply(function (i, j) { this[i][j] -= value; });
         },
         subM : function(value) {
             this.checkDimensions(value);
-            return this.apply(function (mat, i, j) { mat[i][j] += value[i][j]; });
+            return this.apply(function (i, j) { this[i][j] += value[i][j]; });
         },
+        /**
+         * Multiplies a scalar or values from another Matrix (in place)
+         * @param {number|Matrix} value
+         * @returns {this}
+         */
         mul : function(value) {
             if(typeof value === "number")
                 return this.mulS(value);
@@ -292,12 +311,17 @@ define(function(){
                 return this.mulM(value);
         },
         mulS : function(value) {
-            return this.apply(function (mat, i, j) { mat[i][j] *= value; });
+            return this.apply(function (i, j) { this[i][j] *= value; });
         },
         mulM : function(value) {
             this.checkDimensions(value);
-            return this.apply(function (mat, i, j) { mat[i][j] *= value[i][j]; });
+            return this.apply(function (i, j) { this[i][j] *= value[i][j]; });
         },
+        /**
+         * Divides a scalar or values from another Matrix (in place)
+         * @param {number|Matrix} value
+         * @returns {this}
+         */
         div : function(value) {
             if(typeof value === "number")
                 return this.divS(value);
@@ -305,72 +329,116 @@ define(function(){
                 return this.divM(value);
         },
         divS : function(value) {
-            return this.apply(function (mat, i, j) { mat[i][j] /= value; });
+            return this.apply(function (i, j) { this[i][j] /= value; });
         },
         divM : function(value) {
             this.checkDimensions(value);
-            return this.apply(function (mat, i, j) { mat[i][j] /= value[i][j]; });
+            return this.apply(function (i, j) { this[i][j] /= value[i][j]; });
         },
+        /**
+         * Returns a new row vector from the given index
+         * @param {number} index - Row index
+         * @returns {Matrix}
+         */
         getRow : function(index) {
             this.checkRowIndex(index);
-            return new Matrix([this[index]]);
+            return new Matrix([this[index].slice()]);
         },
+        /**
+         * Sets a row at the given index
+         * @param {number} index - Row index
+         * @param {array|Matrix} Array or row vector
+         * @returns {this}
+         */
         setRow : function(index, array) {
             this.checkRowIndex(index);
             if(!(array instanceof Matrix)) array = Matrix.rowVector(array);
             if(array.columns !== this.columns)
                 throw "Invalid row size";
-            this[index] = array[0];
+            this[index] = array[0].slice();
             return this;
         },
+        /**
+         * Removes a row from the given index
+         * @param {number} index - Row index
+         * @returns {this}
+         */
         removeRow : function(index) {
             this.checkRowIndex(index);
             if(this.rows===1)
                 throw "A matrix cannot have less than one row";
-            this.splice(index,1);
+            Asplice.call(this, index, 1);
             this.rows -= 1;
             return this;
         },
+        /**
+         * Adds a row at the given index
+         * @param {number} index - Row index
+         * @param {array|Matrix} Array or row vector
+         * @returns {this}
+         */
         addRow : function(index, array) {
             if(index < 0 || index > this.rows)
                 throw "Row index out of range.";
             if(!(array instanceof Matrix)) array = Matrix.rowVector(array);
             if(array.columns !== this.columns)
                 throw "Invalid row size";
-            this.splice(index, 0, array[0]);
+            Asplice.call(this, index, 0, array[0].slice());
             this.rows += 1;
             return this;
         },
+        /**
+         * Swaps two rows
+         * @param {number} row1 - First row index
+         * @param {number} row2 - Second row index
+         * @returns {this}
+         */
         swapRows : function(row1, row2) {
             this.checkRowIndex(row1);
             this.checkRowIndex(row2);
             var temp = this[row1];
-            this[row1]=this[row2];
-            this[row2]=temp;
+            this[row1] = this[row2];
+            this[row2] = temp;
             return this;
         },
+        /**
+         * Returns a new column vector from the given index
+         * @param {number} index - Column index
+         * @returns {Matrix}
+         */
         getColumn : function(index) {
-            var column, i;
             this.checkColumnIndex(index);
-            column = new Array(this.rows);
-            for(i = 0; i<this.rows; i++) {
+            var l = this.rows, column = new Array(l);
+            for(var i = 0; i < l; i++) {
                 column[i] = [this[i][index]];
             }
             return new Matrix(column);
         },
+        /**
+         * Sets a column at the given index
+         * @param {number} index - Column index
+         * @param {array|Matrix} Array or column vector
+         * @returns {this}
+         */
         setColumn : function(index, array) {
             this.checkColumnIndex(index);
             if(!(array instanceof Matrix)) array = Matrix.columnVector(array);
-            if(array.rows !== this.rows)
+            var l = this.rows;
+            if(array.rows !== l)
                 throw "Invalid column size";
-            for(var i=0; i<this.rows; i++) {
+            for(var i = 0; i < l; i++) {
                 this[i][index] = array[i][0];
             }
             return this;
         },
+        /**
+         * Removes a column from the given index
+         * @param {number} index - Column index
+         * @returns {this}
+         */
         removeColumn : function(index) {
             this.checkColumnIndex(index);
-            if(this.columns===1)
+            if(this.columns === 1)
                 throw "A matrix cannot have less than one column";
             for(var i = 0, ii = this.rows; i < ii; i++) {
                 this[i].splice(index,1);
@@ -378,30 +446,44 @@ define(function(){
             this.columns -= 1;
             return this;
         },
+        /**
+         * Adds a column at the given index
+         * @param {number} index - Column index
+         * @param {array|Matrix} Array or column vector
+         * @returns {this}
+         */
         addColumn : function(index, array) {
             if(index < 0 || index > this.columns)
                 throw "Column index out of range.";
             if(!(array instanceof Matrix)) array = Matrix.columnVector(array);
-            if(array.rows !== this.rows)
+            var l = this.rows;
+            if(array.rows !== l)
                 throw "Invalid column size";
-            for(var i=0; i<this.rows; i++) {
+            for(var i = 0; i < l; i++) {
                 this[i].splice(index, 0, array[i][0]);
             }
             this.columns += 1;
             return this;
         },
+        /**
+         * Swaps two columns
+         * @param {number} column1 - First column index
+         * @param {number} column2 - Second column index
+         * @returns {this}
+         */
         swapColumns : function(column1, column2) {
             this.checkRowIndex(column1);
             this.checkRowIndex(column2);
-            var l=this.rows, temp, row;
-            for(var i=0; i<l; i++) {
+            var l = this.rows, temp, row;
+            for(var i = 0; i < l; i++) {
                 row = this[i];
                 temp = row[column1];
-                row[column1]=row[column2];
-                row[column2]=temp;
+                row[column1] = row[column2];
+                row[column2] = temp;
             }
             return this;
         },
+        /* Internal methods */
         checkRowVector : function(vector) {
             if(vector instanceof Matrix && vector.isRowVector())
                 vector = vector.getRow(0);
@@ -416,86 +498,156 @@ define(function(){
                 throw "vector size must be the same as the number of rows";
             return vector;
         },
+        /**
+         * Adds the values of a row vector to each row
+         * @param {array|Matrix} vector - Array or row vector
+         * @returns {this}
+         */
         addRowVector : function(vector) {
             vector = this.checkRowvector(vector);
-            return this.apply(function(mat, i, j){ mat[i][j] += vector[j] });
+            return this.apply(function(i, j){ this[i][j] += vector[j] });
         },
+        /**
+         * Substracts the values of a row vector from each row
+         * @param {array|Matrix} vector - Array or row vector
+         * @returns {this}
+         */
         subRowVector : function(vector) {
             vector = this.checkRowvector(vector);
-            return this.apply(function(mat, i, j){ mat[i][j] -= vector[j] });
+            return this.apply(function(i, j){ this[i][j] -= vector[j] });
         },
+        /**
+         * Multiplies the values of a row vector with each row
+         * @param {array|Matrix} vector - Array or row vector
+         * @returns {this}
+         */
         mulRowVector : function(vector) {
             vector = this.checkRowvector(vector);
-            return this.apply(function(mat, i, j){ mat[i][j] *= vector[j] });
+            return this.apply(function(i, j){ this[i][j] *= vector[j] });
         },
+        /**
+         * Divides the values of each row by the ones of a row vector
+         * @param {array|Matrix} vector - Array or row vector
+         * @returns {this}
+         */
         divRowVector : function(vector) {
             vector = this.checkRowvector(vector);
-            return this.apply(function(mat, i, j){ mat[i][j] /= vector[j] });
+            return this.apply(function(i, j){ this[i][j] /= vector[j] });
         },
+        /**
+         * Adds the values of a column vector to each column
+         * @param {array|Matrix} vector - Array or column vector
+         * @returns {this}
+         */
         addColumnVector : function(vector) {
             vector = this.checkColumnVector(vector);
-            return this.apply(function(mat, i, j){ mat[i][j] += vector[i] });
+            return this.apply(function(i, j){ this[i][j] += vector[i] });
         },
+        /**
+         * Substracts the values of a column vector from each column
+         * @param {array|Matrix} vector - Array or column vector
+         * @returns {this}
+         */
         subColumnVector : function(vector) {
             vector = this.checkColumnVector(vector);
-            return this.apply(function(mat, i, j){ mat[i][j] -= vector[i] });
+            return this.apply(function(i, j){ this[i][j] -= vector[i] });
         },
+        /**
+         * Multiplies the values of a column vector with each column
+         * @param {array|Matrix} vector - Array or column vector
+         * @returns {this}
+         */
         mulColumnVector : function(vector) {
             vector = this.checkColumnVector(vector);
-            return this.apply(function(mat, i, j){ mat[i][j] *= vector[i] });
+            return this.apply(function(i, j){ this[i][j] *= vector[i] });
         },
+        /**
+         * Divides the values of each column by the ones of a column vector
+         * @param {array|Matrix} vector - Array or column vector
+         * @returns {this}
+         */
         divColumnVector : function(vector) {
             vector = this.checkColumnVector(vector);
-            return this.apply(function(mat, i, j){ mat[i][j] /= vector[i] });
+            return this.apply(function(i, j){ this[i][j] /= vector[i] });
         },
+        /**
+         * Multiplies the values of a row with a scalar
+         * @param {number} index - Row index
+         * @param {number} value
+         * @returns {this}
+         */
         mulRow : function(index, value) {
             checkRowIndex(index);
-            for(var i=0; i<this.columns; i++) {
+            var i = 0, l = this.columns;
+            for(; i < l; i++) {
                 this[index][i] *= value;
             }
         },
+        /**
+         * Multiplies the values of a column with a scalar
+         * @param {number} index - Column index
+         * @param {number} value
+         * @returns {this}
+         */
         mulColumn : function(index, value) {
             checkColumnIndex(index);
-            for(var i=0; i<this.rows; i++) {
+            var i = 0, l = this.rows;
+            for(; i < l; i++) {
                 this[i][index] *= value;
             }
         },
+        /**
+         * Returns the maximum value of the whole matrix
+         * @returns {number}
+         */
         max : function() {
             var v = -Infinity;
-            this.apply(function(mat,i,j){
-                if(mat[i][j] > v)
-                    v = mat[i][j];
+            this.apply(function(i,j){
+                if(this[i][j] > v)
+                    v = this[i][j];
             });
             return v;
         },
+        /**
+         * Returns the index of the maximum value
+         * @returns {object}
+         */
         maxIndex : function() {
             var v = -Infinity;
             var index = {};
-            this.apply(function(mat,i,j){
-                if(mat[i][j] > v) {
-                    v = mat[i][j];
-                    index.row=i;
-                    index.column=j;
+            this.apply(function(i,j){
+                if(this[i][j] > v) {
+                    v = this[i][j];
+                    index.row = i;
+                    index.column = j;
                 }
             });
             return index;
         },
+        /**
+         * Returns the minimum value of the whole matrix
+         * @returns {number}
+         */
         min : function() {
             var v = Infinity;
-            this.apply(function(mat,i,j){
-                if(mat[i][j] < v)
-                    v = mat[i][j];
+            this.apply(function(i,j){
+                if(this[i][j] < v)
+                    v = this[i][j];
             });
             return v;
         },
+        /**
+         * Returns the index of the minimum value
+         * @returns {object}
+         */
         minIndex : function() {
             var v = Infinity;
             var index = {};
-            this.apply(function(mat,i,j){
-                if(mat[i][j] < v) {
-                    v = mat[i][j];
-                    index.row=i;
-                    index.column=j;
+            this.apply(function(i,j){
+                if(this[i][j] < v) {
+                    v = this[i][j];
+                    index.row = i;
+                    index.column = j;
                 }
             });
             return index;
@@ -697,8 +849,6 @@ define(function(){
             return this.rows * this.columns;
         }
     };
-    
-    Matrix.prototype.splice = Array.prototype.splice;
     
     return Matrix;
 
