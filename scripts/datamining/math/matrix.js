@@ -860,7 +860,6 @@ define(function(){
             for( i = 0; i < ii; i++) {
                 vector1 = this[i];
                 for(j = 0; j < jj; j++) {
-                    vector2 = ;
                     newMatrix[i][j] = vector1.dot(rightVectors[j]);
                 }
             }
