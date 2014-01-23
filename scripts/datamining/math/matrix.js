@@ -135,6 +135,12 @@ define(function(){
     };
 
     Matrix.prototype = {
+        /**
+         * @property {number} - The number of elements in the matrix.
+         */
+        get size() {
+            return this.rows * this.columns;
+        },
         /* Internal methods */
         checkRowIndex : function(index) {
             if(index < 0 || index > this.rows-1)
@@ -147,10 +153,6 @@ define(function(){
         checkDimensions : function(otherMatrix) {
             if((this.rows !== otherMatrix.rows)||(this.columns !== otherMatrix.columns))
                 throw "Matrices dimensions must be equal.";
-        },
-        checkMultiply : function(otherMatrix) {
-            if(this.columns !== otherMatrix.rows)
-                throw "Number of columns of left matrix must be equal to number of rows of right matrix.";
         },
         /**
          * Applies a callback for each element of the matrix. 
@@ -652,158 +654,260 @@ define(function(){
             });
             return index;
         },
+        /**
+         * Returns a column vector containing the minimum values of each row
+         * @returns {Matrix}
+         */
         rowMins : function() {
             var mins = Matrix.empty(this.rows, 1);
-            for(var i=0; i<this.rows; i++) {
+            for(var i = 0, ii = this.rows; i < ii; i++) {
                 mins[i][0] = this.getRow(i).min();
             }
             return mins;
         },
+        /**
+         * Returns an array containing the indices of the minimum values of each row
+         * @returns {array}
+         */
         rowMinsIndex : function() {
             var mins = new Array(this.rows);
-            for(var i=0; i<this.rows; i++) {
+            for(var i = 0, ii = this.rows; i < ii; i++) {
                 mins[i] = this.getRow(i).minIndex();
             }
             return mins;
         },
+        /**
+         * Returns a column vector containing the maximum values of each row
+         * @returns {Matrix}
+         */
         rowMaxs : function() {
             var maxs = Matrix.empty(this.rows, 1);
-            for(var i=0; i<this.rows; i++) {
+            for(var i = 0, ii = this.rows; i < ii; i++) {
                 maxs[i][0] = this.getRow(i).max();
             }
             return maxs;
         },
+        /**
+         * Returns an array containing the indices of the maximum values of each row
+         * @returns {array}
+         */
         rowMaxsIndex : function() {
             var maxs = new Array(this.rows);
-            for(var i=0; i<this.rows; i++) {
+            for(var i = 0, ii = this.rows; i < ii; i++) {
                 maxs[i] = this.getRow(i).maxIndex();
             }
             return maxs;
         },
+        /**
+         * Returns a row vector containing the minimum values of each column
+         * @returns {Matrix}
+         */
         columnMins : function() {
             var mins = Matrix.empty(1, this.columns);
-            for(var i=0; i<this.columns; i++) {
+            for(var i = 0, ii = this.columns; i < ii; i++) {
                 mins[0][i] = this.getColumn(i).min();
             }
             return mins;
         },
+        /**
+         * Returns an array containing the indices of the minimum values of each column
+         * @returns {array}
+         */
         columnMinsIndex : function() {
             var mins = new Array(this.columns);
-            for(var i=0; i<this.columns; i++) {
+            for(var i = 0, ii = this.columns; i < ii; i++) {
                 mins[i] = this.getColumn(i).minIndex();
             }
             return mins;
         },
+        /**
+         * Returns a row vector containing the maximum values of each column
+         * @returns {Matrix}
+         */
         columnMaxs : function() {
             var maxs = Matrix.empty(1, this.columns);
-            for(var i=0; i<this.columns; i++) {
+            for(var i = 0, ii = this.columns; i < ii; i++) {
                 maxs[0][i] = this.getColumn(i).max();
             }
             return maxs;
         },
+        /**
+         * Returns an array containing the indices of the maximum values of each column
+         * @returns {array}
+         */
         columnMaxsIndex : function() {
             var maxs = new Array(this.columns);
-            for(var i=0; i<this.columns; i++) {
+            for(var i = 0, ii = this.columns; i < ii; i++) {
                 maxs[i] = this.getColumn(i).maxIndex();
             }
             return maxs;
         },
+        /**
+         * Returns an array containing the diagonal values of the matrix
+         * @returns {array}
+         */
         diag : function() {
             if(!this.isSquare())
                 throw "Only square matrices have a diagonal.";
             var diag = new Array(this.rows);
-            for(var i=0; i<this.rows; i++) {
+            for(var i = 0, ii = this.rows; i < ii; i++) {
                 diag[i] = this[i][i];
             }
             return diag;
         },
-        columnSums : function() {
-            if(this.rows === 1)
-                return this.clone();
-            var v = Matrix.zeros(1, this.columns);
-            this.apply(function(mat,i,j){ v[0][j]+=mat[i][j]; });
-            return v;
-        },
-        columnMeans : function() {
-            return this.columnSums().div(this.rows);
-        },
+        /**
+         * Returns a column vector containing the sum of the values of each row
+         * @returns {Matrix}
+         */
         rowSums : function() {
             if(this.columns === 1)
                 return this.clone();
             var v = Matrix.zeros(this.rows, 1);
-            this.apply(function(mat,i,j){ v[i][0]+=mat[i][j]; });
+            this.apply(function(i, j){ v[i][0] += this[i][j]; });
             return v;
         },
+        /**
+         * Returns a column vector containing the mean of the values of each row
+         * @returns {Matrix}
+         */
         rowMeans : function() {
             return this.rowSums().div(this.columns);
         },
+        /**
+         * Returns a row vector containing the sum of the values of each column
+         * @returns {Matrix}
+         */
+        columnSums : function() {
+            if(this.rows === 1)
+                return this.clone();
+            var v = Matrix.zeros(1, this.columns);
+            this.apply(function(i, j){ v[0][j] += this[i][j]; });
+            return v;
+        },
+        /**
+         * Returns a row vector containing the mean of the values of each column
+         * @returns {Matrix}
+         */
+        columnMeans : function() {
+            return this.columnSums().div(this.rows);
+        },
+        /**
+         * Computes the cumulative sum of the matrix elements (in place, row by row)
+         * @returns {this}
+         */
         cumulativeSum : function() {
             var sum = 0;
-            return this.apply(function(mat, i, j){
-                sum+=mat[i][j];
-                mat[i][j]=sum;
+            return this.apply(function(i, j){
+                sum += this[i][j];
+                this[i][j] = sum;
             });
         },
+        /**
+         * Computes the dot (or scalar) product between the vector and another
+         * @param {Matrix} other vector
+         * @returns {number}
+         */
         dot : function(other) {
-            if(!this.isVector() || !other.isVector())
-                throw "Dot product only applicable to vectors";
+            if(this.size !== other.size)
+                throw "Vectors do not have the same size.";
             var vector1 = this.to1DArray();
             var vector2 = other.to1DArray();
-            if(vector1.length !== vector2.length)
-                throw "Vectors do not have the same size";
-            var dot = 0, l=vector1.length;
-            for(var i=0; i<l; i++) {
-                dot+= vector1[i]*vector2[i];
+            var dot = 0, l = vector1.length;
+            for(var i = 0; i < l; i++) {
+                dot += vector1[i] * vector2[i];
             }
             return dot;
         },
+        /**
+         * Returns the sum of all elements of the matrix
+         * @returns {number}
+         */
         sum : function() {
             var v = 0;
-            this.apply(function(mat, i, j){ v+=mat[i][j]; });
+            this.apply(function(i, j){ v += this[i][j]; });
             return v;
         },
+        /**
+         * Returns the mean of all elements of the matrix
+         * @returns {number}
+         */
         mean : function() {
-            return this.sum()/(this.rows*this.columns);
+            return this.sum()/this.size;
         },
+        /**
+         * Returns the product of all elements of the matrix
+         * @returns {number}
+         */
+        prod : function() {
+            var prod = 1;
+            this.apply(function(i, j){ prod *= this[i][j]; });
+            return prod;
+        },
+        /**
+         * Returns the matrix product between this and other
+         * @returns {Matrix}
+         */
         mmul : function(other) {
-            this.checkMultiply(other);
-            var newMatrix = Matrix.empty(this.rows, other.columns);
+            if(this.columns !== other.rows)
+                throw "Number of columns of left matrix must be equal to number of rows of right matrix.";
+            var ii = this.rows, jj = other.columns;
+            var newMatrix = Matrix.empty(ii, jj);
+            var rightVectors = new Array(jj);
+            
             var i, j, vector1, vector2;
-            for(i=0; i<newMatrix.rows; i++) {
-                vector1 = this.getRow(i);
-                for(j=0; j<newMatrix.columns; j++) {
-                    vector2 = other.getColumn(j);
-                    newMatrix[i][j] = vector1.dot(vector2);
+            for(j = 0; j < jj; j++)
+                rightVectors[j] = other.getColumn(j).transpose();
+            for( i = 0; i < ii; i++) {
+                vector1 = this[i];
+                for(j = 0; j < jj; j++) {
+                    vector2 = ;
+                    newMatrix[i][j] = vector1.dot(rightVectors[j]);
                 }
             }
             return newMatrix;
         },
-        prod : function() {
-            var prod = 1;
-            this.apply(function(mat, i, j){ prod *= mat[i][j]; });
-            return prod;
-        },
-        sortRows : function() {
-            for(var i=0; i<this.rows; i++) {
-                this[i].sort();
+        /**
+         * Sorts the rows (in place)
+         * @param {function} compareFunction - usual Array.prototype.sort comparison function
+         * @returns {this}
+         */
+        sortRows : function(compareFunction) {
+            for(var i = 0, ii = this.rows; i < ii; i++) {
+                this[i].sort(compareFunction);
             }
             return this;
         },
-        sortColumns : function() {
-            for(var i=0; i<this.columns; i++) {
-                this.setColumn(i, this.getColumn(i).to1DArray().sort());
+        /**
+         * Sorts the columns (in place)
+         * @param {function} compareFunction - usual Array.prototype.sort comparison function
+         * @returns {this}
+         */
+        sortColumns : function(compareFunction) {
+            for(var i = 0, ii = this.columns; i < ii; i++) {
+                this.setColumn(i, this.getColumn(i).to1DArray().sort(compareFunction));
             }
             return this;
         },
+        /**
+         * Transposes the matrix and returns the result
+         * @returns {Matrix}
+         */
         transpose : function() {
             var result = Matrix.empty(this.columns, this.rows);
-            this.apply(function(mat, i, j){ result[j][i] = mat[i][j]; });
+            this.apply(function(i, j){ result[j][i] = this[i][j]; });
             return result;
         },
+        /**
+         * Returns a subset of the matrix
+         * @param {number} startRow - First row index
+         * @param {number} endRow - Last row index
+         * @param {number} startColumn - First column index
+         * @param {number} endColumn - Last column index
+         * @returns {Matrix}
+         */
         subMatrix : function(startRow, endRow, startColumn, endColumn) {
-            if ((startRow > endRow) || (startColumn > endColumn) ||  (startRow < 0) || (startRow >= this.rows) ||  (endRow < 0) || (endRow >= this.rows) ||  (startColumn < 0) || (startColumn >= this.columns) ||  (endColumn < 0) || (endColumn >= this.columns)) {
+            if ((startRow > endRow) || (startColumn > endColumn) ||  (startRow < 0) || (startRow >= this.rows) ||  (endRow < 0) || (endRow >= this.rows) ||  (startColumn < 0) || (startColumn >= this.columns) ||  (endColumn < 0) || (endColumn >= this.columns))
                 throw "Argument out of range";
-            }
             var newMatrix = Matrix.empty(endRow - startRow + 1, endColumn - startColumn + 1);
             for (var i = startRow; i <= endRow; i++) {
                 for (var j = startColumn; j <= endColumn; j++) {
@@ -812,25 +916,36 @@ define(function(){
             }
             return newMatrix;
         },
-        subMatrixRow : function(r, j0, j1) {
-            if ((j0 > j1) || (j0 < 0) || (j0 >= this.columns) || (j1 < 0) || (j1 >= this.columns))
+        /**
+         * Returns a subset of the matrix based on an array of row indices
+         * @param {array} r - Array containing the row indices
+         * @param {number} startColumn - First column index
+         * @param {number} endColumn - Last column index
+         * @returns {Matrix}
+         */
+        subMatrixRow : function(r, startColumn, endColumn) {
+            if ((startColumn > endColumn) || (startColumn < 0) || (startColumn >= this.columns) || (endColumn < 0) || (endColumn >= this.columns))
                 throw "Argument out of range.";
-            var X = Matrix.empty(r.length, j1-j0+1);
-            for (var i = 0; i < r.length; i++) {
-                for (var j = j0; j <= j1; j++) {
-                    if ((r[i] < 0) || (r[i] >= this.rows))
+            var l = r.length, rows = this.rows,
+                X = Matrix.empty(l, endColumn - startColumn + 1);
+            for (var i = 0; i < l; i++) {
+                for (var j = startColumn; j <= endColumn; j++) {
+                    if ((r[i] < 0) || (r[i] >= rows))
                         throw "Argument out of range."; 
-                    X[i][j - j0] = this[r[i]][j];
+                    X[i][j - startColumn] = this[r[i]][j];
                 }
             }
             return X;
         },
-        // Sum of the diagonal elements
+        /**
+         * Returns the trace of the matrix (sum of the diagonal elements)
+         * @returns {number}
+         */
         trace : function() {
-            if(!this.isSquare)
+            if(!this.isSquare())
                 throw "The matrix is not square";
-            var trace = 0;
-            for(var i=0; i<this.rows; i++) {
+            var trace = 0, i = 0, l = this.rows;
+            for(; i < l; i++) {
                 trace += this[i][i];
             }
             return trace;
@@ -844,9 +959,6 @@ define(function(){
                 result = self.isSquare() ? new DC.LuDecomposition(self).solve(rightHandSide) : new DC.QrDecomposition(self).solve(rightHandSide);
             });
             return result;
-        },
-        get size() {
-            return this.rows * this.columns;
         }
     };
     
