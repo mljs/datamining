@@ -1,8 +1,9 @@
 define(["./matrix"],function(Matrix){
     // https://github.com/lutzroeder/Mapack/blob/master/Source/EigenvalueDecomposition.cs
     function EigenvalueDecomposition(matrix) {
-        if(!(matrix instanceof Matrix))
-            throw "Argument has to be a Matrix";
+        if(!(matrix instanceof Matrix)) {
+            matrix = new Matrix(matrix);
+        }
         if(!matrix.isSquare())
             throw "Matrix is not a square matrix.";
             
@@ -47,17 +48,17 @@ define(["./matrix"],function(Matrix){
             d[j] = V[n-1][j];
         
         for(var i = n-1; i > 0; i--) {
-            var scale = 0.0;
-            var h = 0.0;
+            var scale = 0;
+            var h = 0;
             for (var k = 0; k < i; k++)
                 scale = scale + Math.abs(d[k]);
             
-            if (scale === 0.0) {
+            if (scale === 0) {
                 e[i] = d[i-1];
                 for (var j = 0; j < i; j++) {
                     d[j] = V[i-1][j];
-                    V[i][j] = 0.0;
-                    V[j][i] = 0.0;
+                    V[i][j] = 0;
+                    V[j][i] = 0;
                 }
             }
             else {
@@ -74,7 +75,7 @@ define(["./matrix"],function(Matrix){
                 h = h - f * g;
                 d[i-1] = f - g;
                 for (var j = 0; j < i; j++)
-                    e[j] = 0.0;
+                    e[j] = 0;
 
                 for (var j = 0; j < i; j++) {
                     f = d[j];
@@ -87,7 +88,7 @@ define(["./matrix"],function(Matrix){
                     e[j] = g;
                 }
                                 
-                f = 0.0;
+                f = 0;
                 for (var j = 0; j < i; j++) {
                     e[j] /= h;
                     f += e[j] * d[j];
@@ -104,7 +105,7 @@ define(["./matrix"],function(Matrix){
                         V[k][j] -= (f * e[k] + g * d[k]);
 
                     d[j] = V[i-1][j];
-                    V[i][j] = 0.0;
+                    V[i][j] = 0;
                 }
             }
             d[i] = h;
@@ -112,14 +113,14 @@ define(["./matrix"],function(Matrix){
         
         for (var i = 0; i < n-1; i++) {
             V[n-1][i] = V[i][i];
-            V[i][i] = 1.0;
+            V[i][i] = 1;
             var h = d[i+1];
-            if (h !== 0.0) {
+            if (h !== 0) {
                 for (var k = 0; k <= i; k++)
                     d[k] = V[k][i+1] / h;
 
                 for (var j = 0; j <= i; j++) {
-                    var g = 0.0;
+                    var g = 0;
                     for (var k = 0; k <= i; k++)
                         g += V[k][i+1] * V[k][j];
                     for (var k = 0; k <= i; k++)
@@ -128,16 +129,16 @@ define(["./matrix"],function(Matrix){
             }
 
             for (var k = 0; k <= i; k++)
-                V[k][i+1] = 0.0;
+                V[k][i+1] = 0;
         }
         
         for (var j = 0; j < n; j++) {
             d[j] = V[n-1][j];
-            V[n-1][j] = 0.0;
+            V[n-1][j] = 0;
         }
                 
-        V[n-1][n-1] = 1.0;
-        e[0] = 0.0;
+        V[n-1][n-1] = 1;
+        e[0] = 0;
     }
     
     function tql2(evd) {
@@ -149,11 +150,11 @@ define(["./matrix"],function(Matrix){
         for (var i = 1; i < n; i++)
             e[i-1] = e[i];
         
-        e[n-1] = 0.0;
+        e[n-1] = 0;
         
-        var f = 0.0;
-        var tst1 = 0.0;
-        var eps = Math.pow(2.0,-52.0);
+        var f = 0;
+        var tst1 = 0;
+        var eps = Math.pow(2,-52);
         
         for (var l = 0; l < n; l++) {
             tst1 = Math.max(tst1,Math.abs(d[l]) + Math.abs(e[l]));
@@ -170,8 +171,8 @@ define(["./matrix"],function(Matrix){
                     iter = iter + 1;
 
                     var g = d[l];
-                    var p = (d[l+1] - g) / (2.0 * e[l]);
-                    var r = hypotenuse(p,1.0);
+                    var p = (d[l+1] - g) / (2 * e[l]);
+                    var r = hypotenuse(p,1);
                     if (p < 0) {
                         r = -r;
                     }
@@ -187,12 +188,12 @@ define(["./matrix"],function(Matrix){
                     f = f + h;
 
                     p = d[m];
-                    var c = 1.0;
+                    var c = 1;
                     var c2 = c;
                     var c3 = c;
                     var el1 = e[l+1];
-                    var s = 0.0;
-                    var s2 = 0.0;
+                    var s = 0;
+                    var s2 = 0;
                     for (var i = m-1; i >= l; i--) {
                         c3 = c2;
                         c2 = c;
@@ -221,7 +222,7 @@ define(["./matrix"],function(Matrix){
                 while (Math.abs(e[l]) > eps*tst1);
             }
             d[l] = d[l] + f;
-            e[l] = 0.0;
+            e[l] = 0;
         }
         
         for (var i = 0; i < n-1; i++) {
@@ -256,12 +257,12 @@ define(["./matrix"],function(Matrix){
         var high = n-1;
  
         for (var m = low+1; m <= high-1; m++) {
-            var scale = 0.0;
+            var scale = 0;
             for (var i = m; i <= high; i++)
                 scale = scale + Math.abs(H[i][m-1]);
 
-            if (scale !== 0.0) {
-                var h = 0.0;
+            if (scale !== 0) {
+                var h = 0;
                 for (var i = high; i >= m; i--) {
                     ort[i] = H[i][m-1]/scale;
                     h += ort[i] * ort[i];
@@ -274,7 +275,7 @@ define(["./matrix"],function(Matrix){
                 ort[m] = ort[m] - g;
 
                 for (var j = m; j < n; j++) {
-                    var f = 0.0;
+                    var f = 0;
                     for (var i = high; i >= m; i--) 
                         f += ort[i]*H[i][j];
 
@@ -284,7 +285,7 @@ define(["./matrix"],function(Matrix){
                 }
 
                 for (var i = 0; i <= high; i++) {
-                    var f = 0.0;
+                    var f = 0;
                     for (var j = high; j >= m; j--)
                         f += ort[j]*H[i][j];
 
@@ -300,15 +301,15 @@ define(["./matrix"],function(Matrix){
  
         for (var i = 0; i < n; i++)
             for (var j = 0; j < n; j++)
-                V[i][j] = (i === j ? 1.0 : 0.0);
+                V[i][j] = (i === j ? 1 : 0);
 
         for (var m = high-1; m >= low+1; m--) {
-            if (H[m][m-1] !== 0.0) {
+            if (H[m][m-1] !== 0) {
                 for (var i = m+1; i <= high; i++)
                     ort[i] = H[i][m-1];
 
                 for (var j = m; j <= high; j++) {
-                    var g = 0.0;
+                    var g = 0;
                     for (var i = m; i <= high; i++)
                         g += ort[i] * V[i][j];
 
@@ -325,8 +326,8 @@ define(["./matrix"],function(Matrix){
         var n = nn-1;
         var low = 0;
         var high = nn-1;
-        var eps = Math.pow(2.0,-52.0);
-        var exshift = 0.0;
+        var eps = Math.pow(2,-52);
+        var exshift = 0;
         var p = 0;
         var q = 0;
         var r = 0;
@@ -342,11 +343,11 @@ define(["./matrix"],function(Matrix){
         var d = evd.d;
         var e = evd.e
         
-        var norm = 0.0;
+        var norm = 0;
         for (var i = 0; i < nn; i++) {
             if (i < low | i > high) {
                 d[i] = H[i][i];
-                e[i] = 0.0;
+                e[i] = 0;
             }
                     
             for (var j = Math.max(i-1,0); j < nn; j++)
@@ -358,7 +359,7 @@ define(["./matrix"],function(Matrix){
             var l = n;
             while (l > low) {
                 s = Math.abs(H[l-1][l-1]) + Math.abs(H[l][l]);
-                if (s === 0.0) s = norm;
+                if (s === 0) s = norm;
                 if (Math.abs(H[l][l-1]) < eps * s)
                     break;
 
@@ -368,13 +369,13 @@ define(["./matrix"],function(Matrix){
             if (l === n) {
                 H[n][n] = H[n][n] + exshift;
                 d[n] = H[n][n];
-                e[n] = 0.0;
+                e[n] = 0;
                 n--;
                 iter = 0;
             } 
             else if (l === n-1) {
                 w = H[n][n-1] * H[n-1][n];
-                p = (H[n-1][n-1] - H[n][n]) / 2.0;
+                p = (H[n-1][n-1] - H[n][n]) / 2;
                 q = p * p + w;
                 z = Math.sqrt(Math.abs(q));
                 H[n][n] = H[n][n] + exshift;
@@ -385,10 +386,10 @@ define(["./matrix"],function(Matrix){
                     z = (p >= 0) ? (p + z) : (p - z);
                     d[n-1] = x + z;
                     d[n] = d[n-1];
-                    if (z !== 0.0) 
+                    if (z !== 0) 
                         d[n] = x - w / z;
-                    e[n-1] = 0.0;
-                    e[n] = 0.0;
+                    e[n-1] = 0;
+                    e[n] = 0;
                     x = H[n,n-1];
                     s = Math.abs(x) + Math.abs(z);
                     p = x / s;
@@ -427,8 +428,8 @@ define(["./matrix"],function(Matrix){
             }
             else {
                 x = H[n][n];
-                y = 0.0;
-                w = 0.0;
+                y = 0;
+                w = 0;
                 if (l < n) {
                     y = H[n-1][n-1];
                     w = H[n][n-1] * H[n-1][n];
@@ -445,12 +446,12 @@ define(["./matrix"],function(Matrix){
                 }
 
                 if (iter === 30) {
-                    s = (y - x) / 2.0;
+                    s = (y - x) / 2;
                     s = s * s + w;
                     if (s > 0) {
                         s = Math.sqrt(s);
                         if (y < x) s = -s;
-                        s = x - w / ((y - x) / 2.0 + s);
+                        s = x - w / ((y - x) / 2 + s);
                         for (var i = low; i <= n; i++)
                             H[i][i] -= s;
                         exshift += s;
@@ -481,9 +482,9 @@ define(["./matrix"],function(Matrix){
 
                 for (var i = m+2; i <= n; i++) 
                 {
-                    H[i][i-2] = 0.0;
+                    H[i][i-2] = 0;
                     if (i > m+2)
-                        H[i][i-3] = 0.0;
+                        H[i][i-3] = 0;
                 }
 
                 for (var k = m; k <= n-1; k++) {
@@ -491,16 +492,16 @@ define(["./matrix"],function(Matrix){
                     if (k !== m) {
                         p = H[k][k-1];
                         q = H[k+1][k-1];
-                        r = (notlast ? H[k+2][k-1] : 0.0);
+                        r = (notlast ? H[k+2][k-1] : 0);
                         x = Math.abs(p) + Math.abs(q) + Math.abs(r);
-                        if (x !== 0.0) {
+                        if (x !== 0) {
                             p = p / x;
                             q = q / x;
                             r = r / x;
                         }
                     }
                             
-                    if (x === 0.0)
+                    if (x === 0)
                         break;
 
                     s = Math.sqrt(p * p + q * q + r * r);
@@ -560,7 +561,7 @@ define(["./matrix"],function(Matrix){
             }
         }
                 
-        if (norm === 0.0) {
+        if (norm === 0) {
             return;
         }
  
@@ -570,21 +571,21 @@ define(["./matrix"],function(Matrix){
 
             if (q === 0) {
                 var l = n;
-                H[n][n] = 1.0;
+                H[n][n] = 1;
                 for (var i = n-1; i >= 0; i--) {
                     w = H[i][i] - p;
-                    r = 0.0;
+                    r = 0;
                     for (var j = l; j <= n; j++) 
                         r = r + H[i][j] * H[j][n];
                     
-                    if (e[i] < 0.0) {
+                    if (e[i] < 0) {
                         z = w;
                         s = r;
                     }
                     else {
                         l = i;
-                        if (e[i] === 0.0) {
-                            H[i][n] = (w !== 0.0) ? (-r / w) : (-r / (eps * norm));
+                        if (e[i] === 0) {
+                            H[i][n] = (w !== 0) ? (-r / w) : (-r / (eps * norm));
                         }
                         else {
                             x = H[i][i+1];
@@ -610,17 +611,17 @@ define(["./matrix"],function(Matrix){
                     H[n-1][n] = -(H[n][n] - p) / H[n][n-1];
                 }
                 else {
-                    cdiv(evd,0.0,-H[n-1][n],H[n-1][n-1]-p,q);
+                    cdiv(evd,0,-H[n-1][n],H[n-1][n-1]-p,q);
                     H[n-1][n-1] = evd.cdivr;
                     H[n-1][n] = evd.cdivi;
                 }
                         
-                H[n][n-1] = 0.0;
-                H[n][n] = 1.0;
+                H[n][n-1] = 0;
+                H[n][n] = 1;
                 for (var i = n-2; i >= 0; i--) {
                     var ra,sa,vr,vi;
-                    ra = 0.0;
-                    sa = 0.0;
+                    ra = 0;
+                    sa = 0;
                     for (var j = l; j <= n; j++) {
                         ra = ra + H[i][j] * H[j][n-1];
                         sa = sa + H[i][j] * H[j][n];
@@ -628,7 +629,7 @@ define(["./matrix"],function(Matrix){
                     
                     w = H[i][i] - p;
 
-                    if (e[i] < 0.0) {
+                    if (e[i] < 0) {
                         z = w;
                         r = ra;
                         s = sa;
@@ -644,8 +645,8 @@ define(["./matrix"],function(Matrix){
                             x = H[i][i+1];
                             y = H[i+1][i];
                             vr = (d[i] - p) * (d[i] - p) + e[i] * e[i] - q * q;
-                            vi = (d[i] - p) * 2.0 * q;
-                            if (vr === 0.0 & vi === 0.0) 
+                            vi = (d[i] - p) * 2 * q;
+                            if (vr === 0 & vi === 0) 
                                 vr = eps * norm * (Math.abs(w) + Math.abs(q) + Math.abs(x) + Math.abs(y) + Math.abs(z));
                             cdiv(evd,x*r-z*ra+q*sa,x*s-z*sa-q*ra,vr,vi);
                             H[i][n-1] = evd.cdivr;
@@ -680,7 +681,7 @@ define(["./matrix"],function(Matrix){
 
         for (var j = nn-1; j >= low; j--) {
             for (var i = low; i <= high; i++) {
-                z = 0.0;
+                z = 0;
                 for (var k = low; k <= Math.min(j,high); k++)
                     z = z + V[i][k] * H[k][j];
                 V[i][j] = z;
@@ -724,7 +725,7 @@ define(["./matrix"],function(Matrix){
             var X = Matrix.empty(n, n);
             for (var i = 0; i < n; i++) {
                 for (var j = 0; j < n; j++)
-                    X[i][j] = 0.0;
+                    X[i][j] = 0;
 
                 X[i][i] = d[i];
                 if (e[i] > 0) {
@@ -766,7 +767,7 @@ define(["./matrix"],function(Matrix){
             for(var i=0; i<rows; i++) {
                 LUrowi = lu[i];
                 var kmax = Math.min(i,j)
-                var s = 0.0;
+                var s = 0;
                 for(var k=0; k<kmax; k++) {
                     s += LUrowi[k]*LUcolj[k];
                 }
@@ -794,7 +795,7 @@ define(["./matrix"],function(Matrix){
                 pivotSign = -pivotSign;
             }
             
-            if(j < rows & lu[j][j] !== 0.0) {
+            if(j < rows & lu[j][j] !== 0) {
                 for(var i=j+1; i<rows; i++) {
                     lu[i][j] /= lu[j][j];
                 }
@@ -920,9 +921,9 @@ define(["./matrix"],function(Matrix){
                 for(var i=k; i<m; i++) {
                     qr[i][k] /= nrm;
                 }
-                qr[k][k] += 1.0;
+                qr[k][k] += 1;
                 for(var j=k+1; j<n; j++) {
-                    var s = 0.0;
+                    var s = 0;
                     for(var i=k; i<m; i++) {
                         s += qr[i][k]*qr[i][j];
                     }
@@ -953,7 +954,7 @@ define(["./matrix"],function(Matrix){
             
             for(var k=0; k<n; k++) {
                 for(var j=0; j<count; j++) {
-                    var s = 0.0;
+                    var s = 0;
                     for(var i=k; i<m; i++) {
                         s += qr[i][k] * X[i][j];
                     }
@@ -996,7 +997,7 @@ define(["./matrix"],function(Matrix){
                     else if (i === j)
                         X[i][j] = this.Rdiag[i];
                     else
-                        X[i][j] = 0.0;
+                        X[i][j] = 0;
                 }
             }
             return X;
@@ -1008,12 +1009,12 @@ define(["./matrix"],function(Matrix){
             
             for(var k = columns - 1; k >= 0; k--) {
                 for(var i = 0; i < rows; i++) {
-                    X[i][k] = 0.0;
+                    X[i][k] = 0;
                 }
-                X[k][k] = 1.0;
+                X[k][k] = 1;
                 for(var j = k; j < columns; j++) {
                     if(qr[k][k] !== 0) {
-                        var s = 0.0;
+                        var s = 0;
                         for(var i = k; i < rows; i++) {
                             s += qr[i][k] * X[i][j];
                         }
@@ -1076,20 +1077,20 @@ define(["./matrix"],function(Matrix){
                 for (var i = k; i < m; i++) {
                     s[k] = hypotenuse(s[k],a[i][k]);
                 }
-                if (s[k] !== 0.0) {
-                    if (a[k][k] < 0.0) {
+                if (s[k] !== 0) {
+                    if (a[k][k] < 0) {
                         s[k] = -s[k];
                     }
                     for (var i = k; i < m; i++) {
                         a[i][k] /= s[k];
                     }
-                    a[k][k] += 1.0;
+                    a[k][k] += 1;
                 }
                 s[k] = -s[k];
             }
             
             for (var j = k+1; j < n; j++) {
-                if ((k < nct) & (s[k] !== 0.0)) {
+                if ((k < nct) & (s[k] !== 0)) {
                     var t = 0;
                     for (var i = k; i < m; i++)
                         t += a[i][k]*a[i][j];
@@ -1110,17 +1111,17 @@ define(["./matrix"],function(Matrix){
                 for (var i = k+1; i < n; i++) {
                     e[k] = hypotenuse(e[k],e[i]);
                 }
-                if (e[k] !== 0.0) {
-                    if (e[k+1] < 0.0)
+                if (e[k] !== 0) {
+                    if (e[k+1] < 0)
                         e[k] = -e[k];
                     for (var i = k+1; i < n; i++)
                         e[i] /= e[k];
-                    e[k+1] += 1.0;
+                    e[k+1] += 1;
                 }
                 e[k] = -e[k];
-                if ((k+1 < m) & (e[k] !== 0.0)) {
+                if ((k+1 < m) & (e[k] !== 0)) {
                     for (var i = k+1; i < m; i++)
-                        work[i] = 0.0;
+                        work[i] = 0;
                     for (var j = k+1; j < n; j++)
                         for (var i = k+1; i < m; i++)
                             work[i] += e[j]*a[i][j];
@@ -1139,18 +1140,18 @@ define(["./matrix"],function(Matrix){
         
         var p = Math.min(n,m+1);
         if(nct < n) s[nct] = a[nct][nct];
-        if (m < p) s[p-1] = 0.0;
+        if (m < p) s[p-1] = 0;
         if (nrt+1 < p) e[nrt] = a[nrt][p-1];
-        e[p-1] = 0.0;
+        e[p-1] = 0;
         
         if (wantu) {
             for (var j = nct; j < nu; j++) {
                 for (var i = 0; i < m; i++) 
-                    U[i][j] = 0.0;
-                U[j][j] = 1.0;
+                    U[i][j] = 0;
+                U[j][j] = 1;
             }
             for (var k = nct-1; k >= 0; k--) {
-                if (s[k] !== 0.0) {
+                if (s[k] !== 0) {
                     for (var j = k+1; j < nu; j++) {
                         var t = 0;
                         for (var i = k; i < m; i++) 
@@ -1161,21 +1162,21 @@ define(["./matrix"],function(Matrix){
                     }
                     for (var i = k; i < m; i++ )
                         U[i][k] = -U[i][k];
-                    U[k][k] = 1.0 + U[k][k];
+                    U[k][k] = 1 + U[k][k];
                     for (var i = 0; i < k-1; i++) 
-                        U[i][k] = 0.0;
+                        U[i][k] = 0;
                 } 
                 else {
                     for (var i = 0; i < m; i++)
-                        U[i][k] = 0.0;
-                    U[k][k] = 1.0;
+                        U[i][k] = 0;
+                    U[k][k] = 1;
                 }
             }
         }
         
         if (wantv) {
             for (var k = n-1; k >= 0; k--) {
-                if ((k < nrt) & (e[k] !== 0.0)) {
+                if ((k < nrt) & (e[k] !== 0)) {
                     for (var j = k+1; j < nu; j++) {
                         var t = 0;
                         for (var i = k+1; i < n; i++) 
@@ -1186,21 +1187,21 @@ define(["./matrix"],function(Matrix){
                     }
                 }
                 for (var i = 0; i < n; i++) 
-                    V[i][k] = 0.0;
-                V[k][k] = 1.0;
+                    V[i][k] = 0;
+                V[k][k] = 1;
             }
         }
         
         var pp = p-1;
         var iter = 0;
-        var eps = Math.pow(2.0, -52.0);
+        var eps = Math.pow(2, -52);
         while(p > 0) {
             var k, kase;
             for (k = p-2; k >= -1; k--) {
                 if (k === -1)
                     break;
                 if (Math.abs(e[k]) <= eps*(Math.abs(s[k]) + Math.abs(s[k+1]))) {
-                    e[k] = 0.0;
+                    e[k] = 0;
                     break;
                 }
             }
@@ -1212,9 +1213,9 @@ define(["./matrix"],function(Matrix){
                 for (ks = p-1; ks >= k; ks--) {
                     if (ks === k) 
                         break;
-                    var t = (ks !== p ? Math.abs(e[ks]) : 0.0) + (ks !== k+1 ? Math.abs(e[ks-1]) : 0.0);
+                    var t = (ks !== p ? Math.abs(e[ks]) : 0) + (ks !== k+1 ? Math.abs(e[ks-1]) : 0);
                     if (Math.abs(s[ks]) <= eps*t) {
-                        s[ks] = 0.0;
+                        s[ks] = 0;
                         break;
                     }
                 }
@@ -1233,7 +1234,7 @@ define(["./matrix"],function(Matrix){
             switch(kase) {
                 case 1: {
                     var f = e[p-2];
-                    e[p-2] = 0.0;
+                    e[p-2] = 0;
                     for (var j = p-2; j >= k; j--) {
                         var t = hypotenuse(s[j],f);
                         var cs = s[j]/t;
@@ -1255,7 +1256,7 @@ define(["./matrix"],function(Matrix){
                     break;
                 case 2 : {
                     var f = e[k-1];
-                    e[k-1] = 0.0;
+                    e[k-1] = 0;
                     for (var j = k; j < p; j++) {
                         var t = hypotenuse(s[j],f);
                         var cs = s[j]/t;
@@ -1280,12 +1281,12 @@ define(["./matrix"],function(Matrix){
                     var epm1 = e[p-2]/scale;
                     var sk = s[k]/scale;
                     var ek = e[k]/scale;
-                    var b = ((spm1 + sp)*(spm1 - sp) + epm1*epm1)/2.0;
+                    var b = ((spm1 + sp)*(spm1 - sp) + epm1*epm1)/2;
                     var c = (sp*epm1)*(sp*epm1);
-                    var shift = 0.0;
-                    if ((b !== 0.0) | (c !== 0.0)) {
+                    var shift = 0;
+                    if ((b !== 0) | (c !== 0)) {
                         shift = Math.sqrt(b*b + c);
-                        if (b < 0.0)
+                        if (b < 0)
                             shift = -shift;
                         shift = c/(b + shift);
                     }
@@ -1329,8 +1330,8 @@ define(["./matrix"],function(Matrix){
                 }
                     break;
                 case 4: {
-                    if (s[k] <= 0.0) {
-                        s[k] = (s[k] < 0.0 ? -s[k] : 0.0);
+                    if (s[k] <= 0) {
+                        s[k] = (s[k] < 0 ? -s[k] : 0);
                         if (wantv)
                             for (var i = 0; i <= pp; i++)
                                 V[i][k] = -V[i][k];
@@ -1382,7 +1383,7 @@ define(["./matrix"],function(Matrix){
             return this.s[0];
         },
         get rank() {
-            var eps = Math.pow(2.0,-52.0);
+            var eps = Math.pow(2,-52);
             var tol = Math.max(this.m,this.n)*this.s[0]*eps;
             var r = 0;
             var s = this.s;
@@ -1397,7 +1398,7 @@ define(["./matrix"],function(Matrix){
         },
         // https://github.com/accord-net/framework/blob/development/Sources/Accord.Math/Decompositions/SingularValueDecomposition.cs
         get threshold() {
-            return (Math.pow(2.0,-52.0)/2) * Math.max(this.m,this.n) * this.s[0];
+            return (Math.pow(2,-52)/2) * Math.max(this.m,this.n) * this.s[0];
         },
         solve : function(value) {
             
@@ -1453,10 +1454,10 @@ define(["./matrix"],function(Matrix){
         
         for(var j = 0; j < dimension; j++) {
             var Lrowj = l[j];
-            var d = 0.0;
+            var d = 0;
             for (var k = 0; k < j; k++) {
                 var Lrowk = l[k];
-                var s = 0.0;
+                var s = 0;
                 for (var i = 0; i < k; i++) {
                     s += Lrowk[i] * Lrowj[i];
                 }
@@ -1468,10 +1469,10 @@ define(["./matrix"],function(Matrix){
 
             d = a[j][j] - d;
             
-            this.positiveDefinite = this.positiveDefinite & (d > 0.0);
-            l[j][j] = Math.sqrt(Math.max(d,0.0));
+            this.positiveDefinite = this.positiveDefinite & (d > 0);
+            l[j][j] = Math.sqrt(Math.max(d,0));
             for (var k = j + 1; k < dimension; k++) {
-                l[j][k] = 0.0;
+                l[j][k] = 0;
             }
         }
     }
@@ -1533,7 +1534,7 @@ define(["./matrix"],function(Matrix){
             return Math.abs(b) * Math.sqrt(1 + r * r);
         }
         
-        return 0.0;
+        return 0;
     }
     
     return {
