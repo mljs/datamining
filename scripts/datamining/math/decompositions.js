@@ -814,7 +814,7 @@ define(["./matrix"],function(Matrix){
                     return false;
             return true;
         },
-        determinant : function() {
+        get determinant() {
             if(!this.LU.isSquare())
                 throw "Matrix must be square";
             var determinant = this.pivotSign, col = this.LU.columns, data = this.LU;
@@ -822,7 +822,7 @@ define(["./matrix"],function(Matrix){
                 determinant *= data[j][j];
             return determinant;
         },
-        lowerTriangularFactor : function() {
+        get lowerTriangularFactor() {
             var rows = this.LU.rows;
             var columns = this.LU.columns;
             var X = Matrix.empty(rows, columns);
@@ -839,7 +839,7 @@ define(["./matrix"],function(Matrix){
             }
             return X;
         },
-        upperTriangularFactor : function() {
+        get upperTriangularFactor() {
             var rows = this.LU.rows;
             var columns = this.LU.columns;
             var X = Matrix.empty(rows, columns);
@@ -854,13 +854,7 @@ define(["./matrix"],function(Matrix){
             }
             return X;
         },
-        pivotPermutationVector : function() {
-            /*var rows = this.LU.rows;
-            var p = new Array(rows);
-            for(var i=0; i<rows; i++) {
-                p[i] = this.pivotVector[i];
-            }
-            return p;*/
+        get pivotPermutationVector() {
             return this.pivotVector.slice();
         },
         solve : function(value) {
@@ -986,7 +980,7 @@ define(["./matrix"],function(Matrix){
             }
             return true;
         },
-        upperTriangularFactor : function() {
+        get upperTriangularFactor() {
             var n = this.QR.columns;
             var X = Matrix.empty(n, n);
             var qr = this.QR;
@@ -1002,7 +996,7 @@ define(["./matrix"],function(Matrix){
             }
             return X;
         },
-        orthogonalFactor : function() {
+        get orthogonalFactor() {
             var rows = this.QR.rows, columns = this.QR.columns;
             var X = Matrix.empty(rows, columns);
             var qr = this.QR;
