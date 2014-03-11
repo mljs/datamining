@@ -1,4 +1,4 @@
-require(["datamining/math/decompositions","datamining/math/matrix","datamining/statistics/models/regression/multivariate-linear-regression"],function(DC,Matrix,MLR){
+require(["datamining/math/matrix","datamining/statistics/analysis/plsa"],function(Matrix,PLSA){
 
     var inputs = new Matrix([
         [7,7,13,7],
@@ -19,6 +19,7 @@ require(["datamining/math/decompositions","datamining/math/matrix","datamining/s
     pls.compute();
 
     var regression = pls.createRegression();
+    console.log(pls)
 
     var w = pls.weights;
     console.log(w.rows, w.columns);

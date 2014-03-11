@@ -1,4 +1,4 @@
-define(function(){
+define(["require"],function(require){
 
     var Asplice = Array.prototype.splice;
     
@@ -948,16 +948,6 @@ define(function(){
                 trace += this[i][i];
             }
             return trace;
-        },
-        inverse : function() {
-            return this.solve(Matrix.eye(this.rows));
-        },
-        solve : function(rightHandSide) {
-            var result, self = this;
-            require(["./decompositions"], function (DC) {
-                result = self.isSquare() ? new DC.LuDecomposition(self).solve(rightHandSide) : new DC.QrDecomposition(self).solve(rightHandSide);
-            });
-            return result;
         }
     };
     

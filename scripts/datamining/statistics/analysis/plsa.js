@@ -1,5 +1,5 @@
 // https://github.com/accord-net/framework/blob/development/Sources/Accord.Statistics/Analysis/PartialLeastSquaresAnalysis.cs
-define(["./../matrix-tools","./../../math/matrix","./../../math/norm","./../../math/decompositions"], function(MTools, Matrix, Norm, DC){
+define(["./../matrix-tools","./../../math/matrix","./../../math/norm","./../../math/decompositions", "./../array-tools", "./../models/regression/multivariate-linear-regression"], function(MTools, Matrix, Norm, DC, ATools, MLR){
 
     function PartialLeastSquaresAnalysis(inputs, outputs, method, algorithm) {
         if(typeof(method)==='undefined') method = "center";
@@ -81,7 +81,6 @@ define(["./../matrix-tools","./../../math/matrix","./../../math/norm","./../../m
             for (var i = 1; i < factors; i++) {
                 this.cumulativeProportionX[i] = this.cumulativeProportionX[i - 1] + this.componentProportionX[i];
                 this.cumulativeProportionY[i] = this.cumulativeProportionY[i - 1] + this.componentProportionY[i];
-                console.log(this.cumulativeProportionX[i] + " " + this.cumulativeProportionY[i]);
             }
 
             this.vip = computeVariableImportanceInProjection(this, factors);
@@ -154,11 +153,8 @@ define(["./../matrix-tools","./../../math/matrix","./../../math/norm","./../../m
                 A[i] = this.meanY[i] - sum;
             }
             
-            var toReturn;
-            require(["./../models/regression/multivariate-linear-regression"],function(MLR){
-                toReturn = new MLR(B, A, true);
-            });
-            return toReturn;
+            return new MLR(B, A, true);
+            
         }
     };
     
@@ -180,16 +176,8 @@ define(["./../matrix-tools","./../../math/matrix","./../../math/norm","./../../m
 
         var covariance = inputsX.transpose().mmul(outputsY);
 
-        var toLog = "";
-            for(var i = 0; i < covariance.rows; i++)
-                for(var j = 0; j < covariance.columns; j++)
-                    toLog += covariance.get(i,j)+" ";
-            console.log(toLog);
-            
-            console.log("start iteration");
-        
         for (var factor = 0; factor < factors; factor++) {
-        
+
             var svd = new DC.SingularValueDecomposition(covariance,
                 {computeLeftSingularVectors: true,
                 computeRightSingularVectors: false,
@@ -222,6 +210,7 @@ define(["./../matrix-tools","./../../math/matrix","./../../math/norm","./../../m
             c = c.divS(norm_t).to1DArray();
 
             var u = new Array(rows);
+            for(var i = 0 ; i < rows; u[i++] = 0);
             for (var i = 0; i < rows; i++)
                 for (var j = 0, jj = c.length; j < jj; j++)
                     u[i] += outputsY[i][j] * c[j];
@@ -249,12 +238,11 @@ define(["./../matrix-tools","./../../math/matrix","./../../math/norm","./../../m
             }
             
             var normV = Norm.euclidean(v);
-            console.log(normV);
             for(var i = 0, ii = v.length; i < ii; i++)
                 v[i] /= normV;
 
             var cov = covariance.clone();
-            for (var i = 0, ii = v.Length; i < ii; i++) {
+            for (var i = 0, ii = v.length; i < ii; i++) {
                 for (var j = 0; j < ii; j++) {
                     var d = v[i] * v[j];
 
@@ -264,13 +252,6 @@ define(["./../matrix-tools","./../../math/matrix","./../../math/norm","./../../m
             }
             covariance = cov;
 
-            console.log(w[0])
-            var toLog = "";
-            for(var i = 0; i < covariance.rows; i++)
-                for(var j = 0; j < covariance.columns; j++)
-                    toLog += covariance.get(i,j)+" ";
-            console.log(toLog);
-            
             W.setColumn(factor, w);
             U.setColumn(factor, u);
             C.setColumn(factor, c);
@@ -483,13 +464,10 @@ define(["./../matrix-tools","./../../math/matrix","./../../math/norm","./../../m
                 sum1 += SS1[i];
                 sum2 += SS2[i];
             }
-            
-            var sum1, sum2;
-            require(["./../array-tools"],function(ATools){
-                sum1 = ATools.cumulativeSum(SS1);
-                sum2 = ATools.cumulativeSum(SS2);
-            });
 
+            var sum1 = ATools.cumulativeSum(SS1),
+                sum2 = ATools.cumulativeSum(SS2);
+        
             for (var k = 0; k < factors; k++)
                 importance[j][k] = Math.sqrt(xcols * sum1[k] / sum2[k]);
         }

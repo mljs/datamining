@@ -1531,12 +1531,22 @@ define(["./matrix"],function(Matrix){
         return 0;
     }
     
+    function inverse(matrix) {
+        return solve(matrix, Matrix.eye(matrix.rows));
+    }
+    
+    function solve(leftHandSide, rightHandSide) {
+        return leftHandSide.isSquare() ? new LuDecomposition(leftHandSide).solve(rightHandSide) : new QrDecomposition(leftHandSide).solve(rightHandSide);
+    }
+    
     return {
         LuDecomposition: LuDecomposition,
         QrDecomposition: QrDecomposition,
         SingularValueDecomposition: SingularValueDecomposition,
         EigenvalueDecomposition: EigenvalueDecomposition,
-        CholeskyDecomposition: CholeskyDecomposition
+        CholeskyDecomposition: CholeskyDecomposition,
+        inverse: inverse,
+        solve: solve
     };
     
 });
