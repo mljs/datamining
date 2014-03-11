@@ -858,9 +858,9 @@ define(["require"],function(require){
             for(j = 0; j < jj; j++)
                 rightVectors[j] = other.getColumn(j).transpose();
             for( i = 0; i < ii; i++) {
-                vector1 = this[i];
+                vector1 = Matrix.columnVector(this[i]);
                 for(j = 0; j < jj; j++) {
-                    newMatrix[i][j] = Matrix.columnVector(vector1).dot(rightVectors[j]);
+                    newMatrix[i][j] = vector1.dot(rightVectors[j]);
                 }
             }
             return newMatrix;
