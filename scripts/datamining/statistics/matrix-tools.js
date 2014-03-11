@@ -399,7 +399,7 @@ define(function(){
         return weightedScatter(matrix, weights, means, factor, dimension);
     }
     
-    function weightedScatter(matrix, weights, means, factor, dimensions) {
+    function weightedScatter(matrix, weights, means, factor, dimension) {
         if(typeof(dimension)==='undefined') dimension = 0;
         if(typeof(means)==='undefined') means = weightedMean(matrix, weights, dimension);
         if(typeof(factor)==='undefined') factor = 1;
