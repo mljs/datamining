@@ -1,5 +1,6 @@
 require(["datamining/statistics/models/regression/simple-linear-regression"],function(SLR) {
 
+    module("Simple linear regression");
     test( "Simple linear regression", function() {
         var inputs = [80,60,10,20,30];
         var outputs = [20,40,30,50,60];

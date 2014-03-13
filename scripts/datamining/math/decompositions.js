@@ -1035,10 +1035,6 @@ define(["./matrix"],function(Matrix){
         var a = value.clone();
         var m = value.rows, n = value.columns;
         var nu = Math.min(m,n);
-        var s = new Array(Math.min(m+1,n));
-        var U = Matrix.zeros(m, nu);
-        var V = Matrix.zeros(n, n);
-        var e = new Array(n), work = new Array(m);
         
         var wantu = true, wantv = true;
         if(options.computeLeftSingularVectors===false)
@@ -1062,6 +1058,11 @@ define(["./matrix"],function(Matrix){
                 wantv = aux;
             }
         }
+        
+        var s = new Array(Math.min(m+1,n));
+        var U = Matrix.zeros(m, nu);
+        var V = Matrix.zeros(n, n);
+        var e = new Array(n), work = new Array(m);
         
         var nct = Math.min(m-1,n);
         var nrt = Math.max(0,Math.min(n-2,m));
@@ -1171,7 +1172,7 @@ define(["./matrix"],function(Matrix){
         if (wantv) {
             for (var k = n-1; k >= 0; k--) {
                 if ((k < nrt) & (e[k] !== 0)) {
-                    for (var j = k+1; j < nu; j++) {
+                    for (var j = k+1; j < n; j++) {
                         var t = 0;
                         for (var i = k+1; i < n; i++) 
                             t += V[i][k]*V[i][j];
@@ -1394,6 +1395,15 @@ define(["./matrix"],function(Matrix){
         get threshold() {
             return (Math.pow(2,-52)/2) * Math.max(this.m,this.n) * this.s[0];
         },
+        get leftSingularVectors() {
+            return this.U;
+        },
+        get rightSingularVectors() {
+            return this.V;
+        },
+        get diagonalMatrix() {
+            return Matrix.diag(this.s);
+        },
         solve : function(value) {
             
             var Y = value;
@@ -1408,7 +1418,7 @@ define(["./matrix"],function(Matrix){
                 else Ls[i][i] = 1 / this.s[i];
             }
             
-
+            
             var VL = this.V.mmul(Ls);
             
             var vrows = this.V.rows;
@@ -1427,6 +1437,33 @@ define(["./matrix"],function(Matrix){
         },
         solveForDiagonal : function(value) {
             return this.solve(Matrix.diag(value));
+        },
+        inverse: function() {
+            var e = this.threshold;
+            
+            var vrows = this.V.rows,
+                vcols = this.V.columns;
+            var X = Matrix.zeros(vrows, this.s.length);
+            for(var i = 0; i < vrows; i++) {
+                for(var j = 0; j < vcols; j++) {
+                    if(Math.abs(this.s[j]) > e)
+                        X[i][j] = this.V[i][j] / this.s[j];
+                }
+            }
+            
+            var urows = this.U.rows,
+                ucols = this.U.columns;
+            var Y = Matrix.zeros(vrows, urows);
+            for(var i = 0; i < vrows; i++) {
+                for(var j = 0; j < ucols; j++) {
+                    var sum = 0;
+                    for(var k = 0; k < ucols; k++)
+                        sum += X[i][k] * this.U[j][k];
+                    Y[i][j] = sum;
+                }
+            }
+            
+            return Y;
         }
     };
     

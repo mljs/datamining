@@ -133,6 +133,51 @@ define(["require"],function(require){
         }
         return matrix;
     };
+    
+    Matrix.indices = function(from, to) {
+        var vector = new Array(to - from);
+        for(var i = 0; i < vector.length; i++)
+            vector[i] = from++;
+        return vector;
+    };
+    
+    Matrix.stack = function(arg1) {
+        if(arg1 instanceof Matrix) {
+            var rows = 0,
+                cols = 0;
+            for(var i = 0; i < arguments.length; i++) {
+                rows += arguments[i].rows;
+                if(arguments[i].columns > cols)
+                    cols = arguments[i].columns;
+            }
+            
+            var r = Matrix.zeros(rows, cols);
+            var c = 0;
+            for(var i = 0; i < arguments.length; i++) {
+                var current = arguments[i];
+                for(var j = 0; j < current.rows; j++) {
+                    for(var k = 0; k < current.columns; k++)
+                        r[c][k] = current[j][k];
+                    c++;
+                }
+            }
+            return r;
+        }
+        else if(arg1 instanceof Array) {
+            var matrix = Matrix.empty(arguments.length, arg1.length);
+            for(var i = 0; i < arguments.length; i++)
+                matrix.setRow(i, arguments[i]);
+            return matrix;
+        }
+    };
+    
+    Matrix.expand = function(base, count) {
+        var expansion = [];
+        for(var i = 0; i < count.length; i++)
+            for(var j = 0; j < count[i]; j++)
+                expansion.push(base[i]);
+        return new Matrix(expansion);
+    };
 
     Matrix.prototype = {
         /**
@@ -506,7 +551,7 @@ define(["require"],function(require){
          * @returns {this}
          */
         addRowVector : function(vector) {
-            vector = this.checkRowvector(vector);
+            vector = this.checkRowVector(vector);
             return this.apply(function(i, j){ this[i][j] += vector[j] });
         },
         /**
@@ -515,7 +560,7 @@ define(["require"],function(require){
          * @returns {this}
          */
         subRowVector : function(vector) {
-            vector = this.checkRowvector(vector);
+            vector = this.checkRowVector(vector);
             return this.apply(function(i, j){ this[i][j] -= vector[j] });
         },
         /**
@@ -524,7 +569,7 @@ define(["require"],function(require){
          * @returns {this}
          */
         mulRowVector : function(vector) {
-            vector = this.checkRowvector(vector);
+            vector = this.checkRowVector(vector);
             return this.apply(function(i, j){ this[i][j] *= vector[j] });
         },
         /**
@@ -533,7 +578,7 @@ define(["require"],function(require){
          * @returns {this}
          */
         divRowVector : function(vector) {
-            vector = this.checkRowvector(vector);
+            vector = this.checkRowVector(vector);
             return this.apply(function(i, j){ this[i][j] /= vector[j] });
         },
         /**
@@ -849,21 +894,29 @@ define(["require"],function(require){
          */
         mmul : function(other) {
             if(this.columns !== other.rows)
-                throw "Number of columns of left matrix must be equal to number of rows of right matrix.";
-            var ii = this.rows, jj = other.columns;
-            var newMatrix = Matrix.empty(ii, jj);
-            var rightVectors = new Array(jj);
+                console.warn("Number of columns of left matrix are not equal to number of rows of right matrix.");
             
-            var i, j, vector1, vector2;
-            for(j = 0; j < jj; j++)
-                rightVectors[j] = other.getColumn(j).transpose();
-            for( i = 0; i < ii; i++) {
-                vector1 = Matrix.columnVector(this[i]);
-                for(j = 0; j < jj; j++) {
-                    newMatrix[i][j] = vector1.dot(rightVectors[j]);
+            var m = this.rows, n = this.columns, p = other.columns;
+            var result = Matrix.empty(m, p);
+            
+            var Bcolj = new Array(n);
+            for (var j = 0; j < p; j++)
+            {
+                for (var k = 0; k < n; k++)
+                    Bcolj[k] = other[k][j];
+
+                for (var i = 0; i < m; i++)
+                {
+                    var Arowi = this[i];
+
+                    var s = 0;
+                    for (var k = 0; k < n; k++)
+                        s += Arowi[k] * Bcolj[k];
+
+                    result[i][j] = s;
                 }
             }
-            return newMatrix;
+            return result;
         },
         /**
          * Sorts the rows (in place)
@@ -923,6 +976,10 @@ define(["require"],function(require){
          * @returns {Matrix}
          */
         subMatrixRow : function(r, startColumn, endColumn) {
+            if(typeof startColumn === "undefined") {
+                startColumn = 0;
+                endColumn = this.columns-1;
+            }
             if ((startColumn > endColumn) || (startColumn < 0) || (startColumn >= this.columns) || (endColumn < 0) || (endColumn >= this.columns))
                 throw "Argument out of range.";
             var l = r.length, rows = this.rows,
@@ -948,6 +1005,15 @@ define(["require"],function(require){
                 trace += this[i][i];
             }
             return trace;
+        },
+        /**
+         * Sets each element of the matrix to its absolute value
+         * @returns {this}
+         */
+        abs: function() {
+            return this.apply(function(i,j){
+                this[i][j] = Math.abs(this[i][j]);
+            });
         }
     };
     

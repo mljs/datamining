@@ -1,5 +1,6 @@
 require(["datamining/statistics/models/regression/multiple-linear-regression","datamining/math/matrix"], function(MLR,Matrix) {
-
+    
+    module("Multiple linear regression");
     test( "Multiple linear regression 1", function() {
         var target = new MLR(1,true);
         var inputs = Matrix.columnVector([80,60,10,20,30]);

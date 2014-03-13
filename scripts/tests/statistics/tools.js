@@ -1,5 +1,7 @@
 require(["datamining/statistics/array-tools", "datamining/statistics/matrix-tools", "datamining/math/matrix"],function(ATools, MTools ,Matrix) {
     
+    module("Statistical tools");
+    
     var values = [-5, 0.2, 2];
     var matrix = new Matrix([[2, -1, 5],[7, 0.5, 9]]);
     
@@ -57,7 +59,7 @@ require(["datamining/statistics/array-tools", "datamining/statistics/matrix-tool
         
         matrix = matrix.transpose();
         mean = MTools.mean(matrix);
-        deepEqual(mean, [2.0000, 5.8999999999999995, 1.5000, -0.43333333333333335], "Matrix transpose means");
+        QUnit.assert.deepClose(mean, [2, 5.9, 1.5, -0.43333333333333335], 0.00001,"Matrix transpose means");
         var median = MTools.median(matrix);
         deepEqual(median, [2.0000, 7.0000, 2.5000, 0.2000], "Matrix medians");
         
@@ -77,21 +79,21 @@ require(["datamining/statistics/array-tools", "datamining/statistics/matrix-tool
     
     test( "Covariance", function() {
         var matrix = new Matrix([[4,2,0.6],[4.2,2.1,0.59],[3.9,2.0,0.58],[4.3,2.1,0.62],[4.1,2.2,0.63]]);
-        var expected = [[0.025,0.007499999999999998,0.0017499999999999985],[0.007499999999999998,0.007000000000000012,0.0013500000000000025],[0.0017499999999999985,0.0013500000000000025,0.0004300000000000008]];
+        var expected = [[0.025,0.0075,0.00175],[0.0075,0.007,0.00135],[0.00175,0.00135,0.00043]];
         var actual = MTools.covariance(matrix);
-        deepEqual(actual, expected,"Covariance of matrix");
+        QUnit.assert.deepClose(actual, expected, 0.00001,"Covariance of matrix");
         
         var matrix2 = matrix.transpose();
         actual = MTools.covariance(matrix2, 1);
-        deepEqual(actual, expected,"Covariance of transpose matrix");
+        QUnit.assert.deepClose(actual, expected, 0.00001, "Covariance of transpose matrix");
         
         var weights = [0.2,0.2,0.2,0.2,0.2];
-        var expected = [[0.025,0.007499999999999997,0.0017499999999999985],[0.007499999999999997,0.007000000000000011,0.0013500000000000025],[0.0017499999999999985,0.0013500000000000025,0.0004300000000000008]];
+        var expected = [[0.025,0.0075,0.00175],[0.0075,0.007,0.00135],[0.00175,0.00135,0.00043]];
         actual = MTools.weightedCovariance(matrix, weights, undefined, 0);
-        deepEqual(actual, expected,"Weighted covariance of matrix");
+        QUnit.assert.deepClose(actual, expected, 0.00001,"Weighted covariance of matrix");
         
         actual = MTools.weightedCovariance(matrix2, weights, undefined, 1);
-        deepEqual(actual, expected,"Weighted covariance of transpose matrix");
+        QUnit.assert.deepClose(actual, expected, 0.00001, "Weighted covariance of transpose matrix");
         
     });
     

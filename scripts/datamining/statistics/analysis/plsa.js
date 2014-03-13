@@ -1,5 +1,5 @@
 // https://github.com/accord-net/framework/blob/development/Sources/Accord.Statistics/Analysis/PartialLeastSquaresAnalysis.cs
-define(["./../matrix-tools","./../../math/matrix","./../../math/norm","./../../math/decompositions", "./../array-tools", "./../models/regression/multivariate-linear-regression"], function(MTools, Matrix, Norm, DC, ATools, MLR){
+define(["./../../util/util","./../matrix-tools","./../../math/matrix","./../../math/norm","./../../math/decompositions", "./../array-tools", "./../models/regression/multivariate-linear-regression"], function(Util, MTools, Matrix, Norm, DC, ATools, MLR){
 
     function PartialLeastSquaresAnalysis(inputs, outputs, method, algorithm) {
         if(typeof(method)==='undefined') method = "center";
@@ -89,6 +89,8 @@ define(["./../matrix-tools","./../../math/matrix","./../../math/norm","./../../m
             for (var i = 0, ii = array.length; i < ii; i++)
                 array[i] = new PartialLeastSquaresFactor(this, i);
             this.factorCollection = array;
+            
+            return this;
         },
         transform : function(data, dimensions) {
             if(typeof(dimensions)==='undefined') dimensions = this.loadingsX.columns;
@@ -187,8 +189,7 @@ define(["./../matrix-tools","./../../math/matrix","./../../math/norm","./../../m
             var c = covariance.transpose().mmul(w);
             w = w.to1DArray();
 
-            var t = new Array(rows);
-            for(var i = 0 ; i < rows; t[i++] = 0);
+            var t = Util.initArray(rows);
             
             for (var i = 0; i < rows; i++)
                 for (var j = 0, jj = w.length ; j < jj; j++)
@@ -198,8 +199,7 @@ define(["./../matrix-tools","./../../math/matrix","./../../math/norm","./../../m
             for(var i = 0; i < rows; i++)
                     t[i] /= norm_t;
 
-            var p = new Array(xcols);
-            for(var i = 0 ; i < xcols; p[i++] = 0);
+            var p = Util.initArray(xcols);
             
             for (var i = 0; i < xcols; i++)
                 for (var j = 0; j < rows; j++)
@@ -209,8 +209,7 @@ define(["./../matrix-tools","./../../math/matrix","./../../math/norm","./../../m
                 w[i] /= norm_t;
             c = c.divS(norm_t).to1DArray();
 
-            var u = new Array(rows);
-            for(var i = 0 ; i < rows; u[i++] = 0);
+            var u = Util.initArray(rows);
             for (var i = 0; i < rows; i++)
                 for (var j = 0, jj = c.length; j < jj; j++)
                     u[i] += outputsY[i][j] * c[j];
@@ -290,20 +289,20 @@ define(["./../matrix-tools","./../../math/matrix","./../../math/norm","./../../m
     }
     
     function nipals(plsa, inputsX, outputsY, factors, tolerance) {
-
+        
         var rows = plsa.sourceX.rows;
         var xcols = plsa.sourceX.columns;
         var ycols = plsa.sourceY.columns;
 
-        var E = plsa.inputsX.clone();
-        var F = plsa.outputsY.clone();
+        var E = inputsX.clone();
+        var F = outputsY.clone();
 
         var T = Matrix.zeros(rows, factors);  // factor score matrix T
         var U = Matrix.zeros(rows, factors);  // factor score matrix U
         var P = Matrix.zeros(xcols, factors); // loading matrix P, the loadings for X such that X = TP + F
         var C = Matrix.zeros(ycols, factors); // loading matrix C, the loadings for Y such that Y = TC + E
         var W = Matrix.zeros(xcols, xcols);   // weight matrix W
-        var B = Array(xcols);
+        var B = Util.initArray(xcols);
 
         var varX = new Array(factors);
         var varY = new Array(factors);
@@ -313,23 +312,18 @@ define(["./../matrix-tools","./../../math/matrix","./../../math/norm","./../../m
         for (var factor = 0; factor < factors && !stop; factor++)
         {
             var t = E.getColumn(largest(E)).to1DArray();
-
             var u = F.getColumn(largest(F)).to1DArray();
 
-            var w = new Array(xcols);
-            for(var i = 0; i < xcols; w[i++]=0);
-            
-            var c = new Array(ycols);
-            for(var i = 0; i < xcols; c[i++]=0);
+            var w = Util.initArray(xcols);
+            var c = Util.initArray(ycols);
 
             var norm_t = Norm.euclidean(t);
-
+            
             while (norm_t > 1e-14)
             {
                 var t0 = t.slice();
 
-                w = new Array(xcols);
-                for(var i = 0; i < xcols; w[i++]=0);
+                w = Util.initArray(xcols);
                 
                 for (var j = 0; j < xcols; j++)
                     for (var i = 0, ii = u.length; i < ii; i++)
@@ -339,8 +333,7 @@ define(["./../matrix-tools","./../../math/matrix","./../../math/norm","./../../m
                 for(var i = 0; i < xcols; i++)
                     w[i] /= normW;
                 
-                t = new Array(rows);
-                for(var i = 0; i < rows; t[i++]=0);
+                t = Util.initArray(rows);
                 
                 for (var i = 0; i < rows; i++)
                     for (var j = 0; j < xcols; j++)
@@ -350,8 +343,7 @@ define(["./../matrix-tools","./../../math/matrix","./../../math/norm","./../../m
                 for(var i = 0; i < rows; i++)
                     t[i] /= norm_t;
 
-                c = new Array(ycols);
-                for(var i = 0; i < ycols; c[i++]=0);
+                c = Util.initArray(ycols);
                 
                 for (var j = 0; j < ycols; j++)
                     for (var i = 0; i < rows; i++)
@@ -361,7 +353,7 @@ define(["./../matrix-tools","./../../math/matrix","./../../math/norm","./../../m
                 for(var i = 0; i < ycols; i++)
                     c[i] /= normC;
 
-                u = new Array(rows);
+                u = Util.initArray(rows);
                 for (var i = 0; i < rows; i++)
                     for (var j = 0; j < ycols; j++)
                         u[i] += F[i][j] * c[j];
@@ -376,8 +368,7 @@ define(["./../matrix-tools","./../../math/matrix","./../../math/norm","./../../m
 
             var b = Matrix.columnVector(t).dot(Matrix.rowVector(u));
 
-            var p = new Array(xcols);
-            for(var i = 0; i < xcols; p[i++]=0);
+            var p = Util.initArray(xcols);
             
             for (var j = 0; j < xcols; j++)
                 for (var i = 0; i < rows; i++)
@@ -410,7 +401,7 @@ define(["./../matrix-tools","./../../math/matrix","./../../math/norm","./../../m
                     stop = false;
             }
         }
-
+        
         plsa.coeffbase = new DC.SingularValueDecomposition(P.transpose()).solveForDiagonal(B);
 
         plsa.scoresX = T;
@@ -474,19 +465,46 @@ define(["./../matrix-tools","./../../math/matrix","./../../math/norm","./../../m
         return importance;
     }
     
-    function PartialLeastSquaresFactor() {
-    
+    function PartialLeastSquaresFactor(analysis, index) {
+        this._index = index;
+        this._analysis = analysis;
     }
     
-    function PartialLeastSquaresFactorCollection() {
-    
-    }
+    PartialLeastSquaresFactor.prototype = {
+        get index() {
+            return this._index;
+        },
+        get analysis() {
+            return this._analysis;
+        },
+        get predictorProportion() {
+            return this._analysis.componentProportionX[this._index];
+        },
+        get predictorCumulativeProportion() {
+            return this._analysis.cumulativeProportionX[this._index];
+        },
+        get dependentProportion() {
+            return this._analysis.componentProportionY[this._index];
+        },
+        get dependentCumulativeProportion() {
+            return this._analysis.cumulativeProportionY[this._index];
+        },
+        get independentLatentVector() {
+            return this._analysis.loadingsX.getColumn(this._index).to1DArray();
+        },
+        get dependentLatentVector() {
+            return this._analysis.loadingsY.getColumn(this._index).to1DArray();
+        },
+        get variableImportance() {
+            return this._analysis.importance.getColumn(this._index).to1DArray();
+        }
+    };
     
     function adjust(plsa, matrix, columnMeans, columnStdDev, inPlace) {
         var result = MTools.center(matrix,columnMeans,inPlace);
         if(columnStdDev !== null && plsa.analysisMethod === "standardize") {
             for (var j = 0, jj = columnStdDev.length; j < jj; j++)
-                if (columnStdDev[j] === 0) throw new ArithmeticException("Standard deviation cannot be zero (cannot standardize the constant variable at column index " + j + ").");
+                if (columnStdDev[j] === 0) throw "Standard deviation cannot be zero (cannot standardize the constant variable at column index " + j + ").";
             MTools.standardize(result, columnStdDev, true);
         }
         
@@ -534,10 +552,10 @@ define(["./../matrix-tools","./../../math/matrix","./../../math/norm","./../../m
             return this.inputs ? this.analysis.loadingsX : this.analysis.loadingsY;
         },
         get factorProportions() {
-            return this.inputs ? this.analysis.cumulativeProportionX : this.analysis.cumulativeProportionY;
+            return this.inputs ? this.analysis.componentProportionX : this.analysis.componentProportionY;
         },
         transform : function(data, factors) {
-            return inputs ? this.analysis.transform(data, factors) : this.analysis.transformOutput(data, factors);
+            return this.inputs ? this.analysis.transform(data, factors) : this.analysis.transformOutput(data, factors);
         }
     };
     

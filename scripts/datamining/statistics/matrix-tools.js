@@ -285,10 +285,9 @@ define(function(){
     function center(matrix, means, inPlace) {
         if(typeof(means)==='undefined') means = mean(matrix);
         if(typeof(inPlace)==='undefined') inPlace = false;
-        var result = matrix;
+        var result = matrix, l = matrix.length;
         
         if(!inPlace) {
-            var l = matrix.length
             result = new Array(l);
             for(var i = 0; i < l; i++)
                 result[i] = new Array(matrix[i].length);

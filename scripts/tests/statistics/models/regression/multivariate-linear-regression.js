@@ -1,5 +1,6 @@
 require(["datamining/statistics/models/regression/multivariate-linear-regression","datamining/math/matrix"],function(MLR,Matrix){
-
+    
+    module("Multivariate linear regression");
     test("Multivariate linear regression 1", function() {
         var X = new Matrix([[4.47],[208.30],[3400.00]]);
         var Y = new Matrix([[0.51],[105.66],[1800.00]]);
