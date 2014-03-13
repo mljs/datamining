@@ -1455,7 +1455,7 @@ define(["./matrix"],function(Matrix){
                 ucols = this.U.columns;
             var Y = Matrix.zeros(vrows, urows);
             for(var i = 0; i < vrows; i++) {
-                for(var j = 0; j < ucols; j++) {
+                for(var j = 0; j < urows; j++) {
                     var sum = 0;
                     for(var k = 0; k < ucols; k++)
                         sum += X[i][k] * this.U[j][k];
