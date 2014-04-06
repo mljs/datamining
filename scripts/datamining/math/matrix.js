@@ -21,9 +21,9 @@ define(["require"],function(require){
             if (newData[i].length !== columns)
                 throw "Inconsistent array dimensions";
         }
-
-        newData.rows = rows;
-        newData.columns = columns;
+		
+        Object.defineProperty(newData, "rows", {writable: true, value: rows});
+        Object.defineProperty(newData, "columns", {writable: true, value: columns});
         
         newData.__proto__ = Matrix.prototype;
         
