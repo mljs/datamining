@@ -1,6 +1,13 @@
-define(["require"],function(require){
+define(function(){
 
     var Asplice = Array.prototype.splice;
+    
+    function MatrixError(message) {
+        this.name = "MatrixError";
+        this.message = message || "Unknown matrix error";
+    }
+    MatrixError.prototype = new Error();
+    MatrixError.prototype.constructor = MatrixError;
     
     /**
      * Real matrix.
@@ -15,11 +22,11 @@ define(["require"],function(require){
         columns = newData[0].length;
         
         if(columns===undefined)
-            throw "Data must be a 2D array.";
+            throw MatrixError("Data must be a 2D array.");
         
         for (; i < rows; i++) {
             if (newData[i].length !== columns)
-                throw "Inconsistent array dimensions";
+                throw MatrixError("Inconsistent array dimensions");
         }
 		
         Object.defineProperty(newData, "rows", {writable: true, value: rows});
@@ -41,9 +48,9 @@ define(["require"],function(require){
 
         length = newRows * newColumns;
         if (length !== newData.length)
-            throw "Data length does not match given dimensions.";
+            throw MatrixError("Data length does not match given dimensions.");
 
-        data = new Array(newRows);
+        data = Array(newRows);
         for (; i < newRows; i++) {
             data[i] = newData.slice(i*newColumns,(i+1)*newColumns);
         }
@@ -63,7 +70,7 @@ define(["require"],function(require){
      * @param {array} newData - A 1D array containing data for the vector
      */
     Matrix.columnVector = function (newData) {
-        var l = newData.length, vector = new Array(l);
+        var l = newData.length, vector = Array(l);
         for(var i = 0; i < l; i++)
             vector[i] = [newData[i]];
         return new Matrix(vector);
@@ -75,9 +82,9 @@ define(["require"],function(require){
      * @param {number} columns - Number of columns
      */
     Matrix.empty = function (rows, columns) {
-        var array = new Array(rows);
+        var array = Array(rows);
         for(var i = 0; i < rows; i++) {
-            array[i] = new Array(columns);
+            array[i] = Array(columns);
         }
         return new Matrix(array);
     };
@@ -135,7 +142,7 @@ define(["require"],function(require){
     };
     
     Matrix.indices = function(from, to) {
-        var vector = new Array(to - from);
+        var vector = Array(to - from);
         for(var i = 0; i < vector.length; i++)
             vector[i] = from++;
         return vector;
@@ -189,15 +196,15 @@ define(["require"],function(require){
         /* Internal methods */
         checkRowIndex : function(index) {
             if(index < 0 || index > this.rows-1)
-                throw "Row index out of range.";
+                throw MatrixError("Row index out of range.");
         },
         checkColumnIndex : function(index) {
             if(index < 0 || index > this.columns-1)
-                throw "Column index out of range.";
+                throw MatrixError("Column index out of range.");
         },
         checkDimensions : function(otherMatrix) {
             if((this.rows !== otherMatrix.rows)||(this.columns !== otherMatrix.columns))
-                throw "Matrices dimensions must be equal.";
+                throw MatrixError("Matrices dimensions must be equal.");
         },
         /**
          * Applies a callback for each element of the matrix. 
@@ -232,7 +239,7 @@ define(["require"],function(require){
          * Returns a 2D array containing the data
          */
         to2DArray : function() {
-            var l = this.rows, copy = new Array(l);
+            var l = this.rows, copy = Array(l);
             for(var i = 0; i < l; i++) {
                 copy[i] = this[i].slice();
             }
@@ -401,7 +408,7 @@ define(["require"],function(require){
             this.checkRowIndex(index);
             if(!(array instanceof Matrix)) array = Matrix.rowVector(array);
             if(array.columns !== this.columns)
-                throw "Invalid row size";
+                throw MatrixError("Invalid row size");
             this[index] = array[0].slice();
             return this;
         },
@@ -413,7 +420,7 @@ define(["require"],function(require){
         removeRow : function(index) {
             this.checkRowIndex(index);
             if(this.rows===1)
-                throw "A matrix cannot have less than one row";
+                throw MatrixError("A matrix cannot have less than one row");
             Asplice.call(this, index, 1);
             this.rows -= 1;
             return this;
@@ -426,10 +433,10 @@ define(["require"],function(require){
          */
         addRow : function(index, array) {
             if(index < 0 || index > this.rows)
-                throw "Row index out of range.";
+                throw MatrixError("Row index out of range.");
             if(!(array instanceof Matrix)) array = Matrix.rowVector(array);
             if(array.columns !== this.columns)
-                throw "Invalid row size";
+                throw MatrixError("Invalid row size");
             Asplice.call(this, index, 0, array[0].slice());
             this.rows += 1;
             return this;
@@ -455,7 +462,7 @@ define(["require"],function(require){
          */
         getColumn : function(index) {
             this.checkColumnIndex(index);
-            var l = this.rows, column = new Array(l);
+            var l = this.rows, column = Array(l);
             for(var i = 0; i < l; i++) {
                 column[i] = [this[i][index]];
             }
@@ -472,7 +479,7 @@ define(["require"],function(require){
             if(!(array instanceof Matrix)) array = Matrix.columnVector(array);
             var l = this.rows;
             if(array.rows !== l)
-                throw "Invalid column size";
+                throw MatrixError("Invalid column size");
             for(var i = 0; i < l; i++) {
                 this[i][index] = array[i][0];
             }
@@ -486,7 +493,7 @@ define(["require"],function(require){
         removeColumn : function(index) {
             this.checkColumnIndex(index);
             if(this.columns === 1)
-                throw "A matrix cannot have less than one column";
+                throw MatrixError("A matrix cannot have less than one column");
             for(var i = 0, ii = this.rows; i < ii; i++) {
                 this[i].splice(index,1);
             }
@@ -501,11 +508,11 @@ define(["require"],function(require){
          */
         addColumn : function(index, array) {
             if(index < 0 || index > this.columns)
-                throw "Column index out of range.";
+                throw MatrixError("Column index out of range.");
             if(!(array instanceof Matrix)) array = Matrix.columnVector(array);
             var l = this.rows;
             if(array.rows !== l)
-                throw "Invalid column size";
+                throw MatrixError("Invalid column size");
             for(var i = 0; i < l; i++) {
                 this[i].splice(index, 0, array[i][0]);
             }
@@ -535,14 +542,14 @@ define(["require"],function(require){
             if(vector instanceof Matrix && vector.isRowVector())
                 vector = vector.getRow(0);
             if(vector.length !== this.columns)
-                throw "vector size must be the same as the number of columns";
+                throw MatrixError("vector size must be the same as the number of columns");
             return vector;
         },
         checkColumnVector : function(vector) {
             if(vector instanceof Matrix && vector.isColumnVector())
                 vector = vector.getColumn(0);
             if(vector.length !== this.rows)
-                throw "vector size must be the same as the number of rows";
+                throw MatrixError("vector size must be the same as the number of rows");
             return vector;
         },
         /**
@@ -715,7 +722,7 @@ define(["require"],function(require){
          * @returns {array}
          */
         rowMinsIndex : function() {
-            var mins = new Array(this.rows);
+            var mins = Array(this.rows);
             for(var i = 0, ii = this.rows; i < ii; i++) {
                 mins[i] = this.getRow(i).minIndex();
             }
@@ -737,7 +744,7 @@ define(["require"],function(require){
          * @returns {array}
          */
         rowMaxsIndex : function() {
-            var maxs = new Array(this.rows);
+            var maxs = Array(this.rows);
             for(var i = 0, ii = this.rows; i < ii; i++) {
                 maxs[i] = this.getRow(i).maxIndex();
             }
@@ -759,7 +766,7 @@ define(["require"],function(require){
          * @returns {array}
          */
         columnMinsIndex : function() {
-            var mins = new Array(this.columns);
+            var mins = Array(this.columns);
             for(var i = 0, ii = this.columns; i < ii; i++) {
                 mins[i] = this.getColumn(i).minIndex();
             }
@@ -781,7 +788,7 @@ define(["require"],function(require){
          * @returns {array}
          */
         columnMaxsIndex : function() {
-            var maxs = new Array(this.columns);
+            var maxs = Array(this.columns);
             for(var i = 0, ii = this.columns; i < ii; i++) {
                 maxs[i] = this.getColumn(i).maxIndex();
             }
@@ -793,8 +800,8 @@ define(["require"],function(require){
          */
         diag : function() {
             if(!this.isSquare())
-                throw "Only square matrices have a diagonal.";
-            var diag = new Array(this.rows);
+                throw MatrixError("Only square matrices have a diagonal.");
+            var diag = Array(this.rows);
             for(var i = 0, ii = this.rows; i < ii; i++) {
                 diag[i] = this[i][i];
             }
@@ -854,7 +861,7 @@ define(["require"],function(require){
          */
         dot : function(other) {
             if(this.size !== other.size)
-                throw "Vectors do not have the same size.";
+                throw MatrixError("Vectors do not have the same size.");
             var vector1 = this.to1DArray();
             var vector2 = other.to1DArray();
             var dot = 0, l = vector1.length;
@@ -899,7 +906,7 @@ define(["require"],function(require){
             var m = this.rows, n = this.columns, p = other.columns;
             var result = Matrix.empty(m, p);
             
-            var Bcolj = new Array(n);
+            var Bcolj = Array(n);
             for (var j = 0; j < p; j++)
             {
                 for (var k = 0; k < n; k++)
@@ -959,7 +966,7 @@ define(["require"],function(require){
          */
         subMatrix : function(startRow, endRow, startColumn, endColumn) {
             if ((startRow > endRow) || (startColumn > endColumn) ||  (startRow < 0) || (startRow >= this.rows) ||  (endRow < 0) || (endRow >= this.rows) ||  (startColumn < 0) || (startColumn >= this.columns) ||  (endColumn < 0) || (endColumn >= this.columns))
-                throw "Argument out of range";
+                throw MatrixError("Argument out of range");
             var newMatrix = Matrix.empty(endRow - startRow + 1, endColumn - startColumn + 1);
             for (var i = startRow; i <= endRow; i++) {
                 for (var j = startColumn; j <= endColumn; j++) {
@@ -981,13 +988,13 @@ define(["require"],function(require){
                 endColumn = this.columns-1;
             }
             if ((startColumn > endColumn) || (startColumn < 0) || (startColumn >= this.columns) || (endColumn < 0) || (endColumn >= this.columns))
-                throw "Argument out of range.";
+                throw MatrixError("Argument out of range.");
             var l = r.length, rows = this.rows,
                 X = Matrix.empty(l, endColumn - startColumn + 1);
             for (var i = 0; i < l; i++) {
                 for (var j = startColumn; j <= endColumn; j++) {
                     if ((r[i] < 0) || (r[i] >= rows))
-                        throw "Argument out of range."; 
+                        throw MatrixError("Argument out of range."); 
                     X[i][j - startColumn] = this[r[i]][j];
                 }
             }
@@ -999,7 +1006,7 @@ define(["require"],function(require){
          */
         trace : function() {
             if(!this.isSquare())
-                throw "The matrix is not square";
+                throw MatrixError("The matrix is not square");
             var trace = 0, i = 0, l = this.rows;
             for(; i < l; i++) {
                 trace += this[i][i];
