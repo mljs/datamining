@@ -1,6 +1,7 @@
 // https://github.com/accord-net/framework/blob/development/Sources/Accord.Math/Distance.cs
 define(function(){
     
+	/* http://en.wikipedia.org/wiki/Taxicab_geometry */
     function manhattan(x,y) {
         var sum = 0,
             i = 0,
@@ -57,6 +58,17 @@ define(function(){
             if(x[i] !== y[i]) d++;
         return d;
     }
+	
+	/* http://en.wikipedia.org/wiki/Minkowski_distance */
+	function minkowski(x,y,order) {
+		var sum = 0,
+			i = 0,
+			ii = x.length;
+		for(; i < ii; i++) {
+			sum += Math.pow(Math.abs(x[i]-y[i]), order);
+		}
+		return Math.pow(sum, 1/order);
+	}
     
     return {
         manhattan : manhattan,
@@ -64,7 +76,8 @@ define(function(){
         squareEuclidean : squareEuclidean,
         euclidean : euclidean,
         bhattacharyya : bhattacharyya,
-        hamming : hamming
+        hamming : hamming,
+		minkowski: minkowski
     };
     
 });
