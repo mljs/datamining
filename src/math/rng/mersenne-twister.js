@@ -1,7 +1,6 @@
-// AMD version of the JavaScript Mersenne Twister
+// NodeJS version of the JavaScript Mersenne Twister
 // Michaël Zasso - 2014
-define(function(){
-"use strict";
+'use strict';
 
 // this program is a JavaScript version of Mersenne Twister, with concealment and encapsulation in class,
 // an almost straight conversion from the original program, mt19937ar.c,
@@ -127,7 +126,7 @@ function MersenneTwister19937(seed)
 	this.init_by_array = function (init_key, key_length)
 	{
 		//c//int i, j, k;
-		var i, j, k;
+		var i, j, k, dbg;
 		//c//init_genrand(19650218);
 		this.init_genrand(19650218);
 		i=1; j=0;
@@ -263,6 +262,4 @@ MersenneTwister19937.prototype.init = function(a){ this.init_genrand(a); };
 MersenneTwister19937.prototype.nextInt = function() { return this.genrand_int32(); };
 MersenneTwister19937.prototype.nextDouble = function() { return this.genrand_real1(); };
 
-return MersenneTwister19937;
-
-});
+module.exports = MersenneTwister19937;
