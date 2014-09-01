@@ -1,4 +1,4 @@
-require(["datamining/math/matrix","datamining/statistics/analysis/plsa", "datamining/statistics/matrix-tools"],function(Matrix,PLSA,MTools){
+require(["../../../scripts/datamining/math/matrix","datamining/statistics/analysis/plsa", "datamining/statistics/matrix-tools"],function(Matrix,PLSA,MTools){
     
     module("PLSA");
     test( "Partial Least Square Analysis - simpls", function() {

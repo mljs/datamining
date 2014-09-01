@@ -1,4 +1,4 @@
-require(["datamining/statistics/array-tools", "datamining/statistics/matrix-tools", "datamining/math/matrix"],function(ATools, MTools ,Matrix) {
+require(["../../scripts/datamining/statistics/array-tools", "datamining/statistics/matrix-tools", "datamining/math/matrix"],function(ATools, MTools ,Matrix) {
     
     module("Statistical tools");
     

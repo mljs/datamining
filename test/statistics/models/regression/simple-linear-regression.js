@@ -1,4 +1,4 @@
-require(["datamining/statistics/models/regression/simple-linear-regression"],function(SLR) {
+require(["../../../../scripts/datamining/statistics/models/regression/simple-linear-regression"],function(SLR) {
 
     module("Simple linear regression");
     test( "Simple linear regression", function() {

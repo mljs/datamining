@@ -1,4 +1,4 @@
-require(["datamining/statistics/models/regression/multiple-linear-regression","datamining/math/matrix"], function(MLR,Matrix) {
+require(["../../../../scripts/datamining/statistics/models/regression/multiple-linear-regression","datamining/math/matrix"], function(MLR,Matrix) {
     
     module("Multiple linear regression");
     test( "Multiple linear regression 1", function() {

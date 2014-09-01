@@ -1,4 +1,4 @@
-define(["datamining/math/matrix","datamining/math/decompositions"],function(Matrix,DC){
+define(["../../scripts/datamining/math/matrix","datamining/math/decompositions"],function(Matrix,DC){
     
     module("Decompositions");
     
