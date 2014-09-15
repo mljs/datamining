@@ -1,2 +1,2 @@
-datamining-js
+Data mining
 =============

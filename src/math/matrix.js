@@ -6,13 +6,13 @@ function MatrixError(message) {
     this.name = "MatrixError";
     this.message = message || "Unknown matrix error";
 }
-MatrixError.prototype = new Error();
+MatrixError.prototype = new Error;
 MatrixError.prototype.constructor = MatrixError;
 
 /**
  * Real matrix.
  * @constructor
- * @param {array} newData - A 2D array containing data for the matrix.
+ * @param {Array} newData - A 2D array containing data for the matrix.
  */
 function Matrix(newData) {
     if (newData instanceof Matrix) return newData;
@@ -41,7 +41,7 @@ function Matrix(newData) {
  * Constructs a Matrix with the chosen dimensions from a 1D array.
  * @param {number} newRows - Number of rows
  * @param {number} newColumns - Number of columns
- * @param {array} newData - A 1D array containing data for the matrix
+ * @param {Array} newData - A 1D array containing data for the matrix
  */
 Matrix.from1DArray = function (newRows, newColumns, newData) {
     var length, data, i = 0;
@@ -50,7 +50,7 @@ Matrix.from1DArray = function (newRows, newColumns, newData) {
     if (length !== newData.length)
         throw new MatrixError("Data length does not match given dimensions.");
 
-    data = Array(newRows);
+    data = new Array(newRows);
     for (; i < newRows; i++) {
         data[i] = newData.slice(i * newColumns, (i + 1) * newColumns);
     }
@@ -59,7 +59,7 @@ Matrix.from1DArray = function (newRows, newColumns, newData) {
 
 /**
  * Creates a row vector, a matrix with only one row.
- * @param {array} newData - A 1D array containing data for the vector
+ * @param {Array} newData - A 1D array containing data for the vector
  */
 Matrix.rowVector = function (newData) {
     return new Matrix([newData]);
@@ -67,10 +67,10 @@ Matrix.rowVector = function (newData) {
 
 /**
  * Creates a column vector, a matrix with only one column.
- * @param {array} newData - A 1D array containing data for the vector
+ * @param {Array} newData - A 1D array containing data for the vector
  */
 Matrix.columnVector = function (newData) {
-    var l = newData.length, vector = Array(l);
+    var l = newData.length, vector = new Array(l);
     for (var i = 0; i < l; i++)
         vector[i] = [newData[i]];
     return new Matrix(vector);
@@ -82,9 +82,9 @@ Matrix.columnVector = function (newData) {
  * @param {number} columns - Number of columns
  */
 Matrix.empty = function (rows, columns) {
-    var array = Array(rows);
+    var array = new Array(rows);
     for (var i = 0; i < rows; i++) {
-        array[i] = Array(columns);
+        array[i] = new Array(columns);
     }
     return new Matrix(array);
 };
@@ -133,7 +133,7 @@ Matrix.eye = function (n) {
 
 /**
  * Creates a diagonal matrix based on the given array.
- * @param {array} data - Array containing the data for the diagonal
+ * @param {Array} data - Array containing the data for the diagonal
  */
 Matrix.diag = function (data) {
     var l = data.length, matrix = Matrix.zeros(l, l);
@@ -144,17 +144,18 @@ Matrix.diag = function (data) {
 };
 
 Matrix.indices = function (from, to) {
-    var vector = Array(to - from);
+    var vector = new Array(to - from);
     for (var i = 0; i < vector.length; i++)
         vector[i] = from++;
     return vector;
 };
 
 Matrix.stack = function (arg1) {
+    var i, j, k;
     if (arg1 instanceof Matrix) {
         var rows = 0,
             cols = 0;
-        for (var i = 0; i < arguments.length; i++) {
+        for (i = 0; i < arguments.length; i++) {
             rows += arguments[i].rows;
             if (arguments[i].columns > cols)
                 cols = arguments[i].columns;
@@ -162,10 +163,10 @@ Matrix.stack = function (arg1) {
 
         var r = Matrix.zeros(rows, cols);
         var c = 0;
-        for (var i = 0; i < arguments.length; i++) {
+        for (i = 0; i < arguments.length; i++) {
             var current = arguments[i];
-            for (var j = 0; j < current.rows; j++) {
-                for (var k = 0; k < current.columns; k++)
+            for (j = 0; j < current.rows; j++) {
+                for (k = 0; k < current.columns; k++)
                     r[c][k] = current[j][k];
                 c++;
             }
@@ -174,7 +175,7 @@ Matrix.stack = function (arg1) {
     }
     else if (arg1 instanceof Array) {
         var matrix = Matrix.empty(arguments.length, arg1.length);
-        for (var i = 0; i < arguments.length; i++)
+        for (i = 0; i < arguments.length; i++)
             matrix.setRow(i, arguments[i]);
         return matrix;
     }
@@ -211,6 +212,7 @@ Matrix.prototype = {
     /**
      * Applies a callback for each element of the matrix.
      * @param {function} callback - Function that will be called with two parameters : i (index of the row) and j (index of the column)
+     * @returns {this}
      */
     apply: function (callback) {
         var ii = this.rows, jj = this.columns;
@@ -241,7 +243,7 @@ Matrix.prototype = {
      * Returns a 2D array containing the data
      */
     to2DArray: function () {
-        var l = this.rows, copy = Array(l);
+        var l = this.rows, copy = new Array(l);
         for (var i = 0; i < l; i++) {
             copy[i] = this[i].slice();
         }
@@ -276,7 +278,7 @@ Matrix.prototype = {
      */
     isSymmetric: function () {
         if (this.isSquare()) {
-            var l = this.rows
+            var l = this.rows;
             for (var i = 0; i < l; i++) {
                 for (var j = 0; j <= i; j++) {
                     if (this[i][j] !== this[j][i]) {
@@ -421,7 +423,7 @@ Matrix.prototype = {
     /**
      * Sets a row at the given index
      * @param {number} index - Row index
-     * @param {array|Matrix} Array or row vector
+     * @param {Array|Matrix} array - Array or row vector
      * @returns {this}
      */
     setRow: function (index, array) {
@@ -448,7 +450,7 @@ Matrix.prototype = {
     /**
      * Adds a row at the given index
      * @param {number} index - Row index
-     * @param {array|Matrix} Array or row vector
+     * @param {Array|Matrix} array - Array or row vector
      * @returns {this}
      */
     addRow: function (index, array) {
@@ -482,7 +484,7 @@ Matrix.prototype = {
      */
     getColumn: function (index) {
         this.checkColumnIndex(index);
-        var l = this.rows, column = Array(l);
+        var l = this.rows, column = new Array(l);
         for (var i = 0; i < l; i++) {
             column[i] = [this[i][index]];
         }
@@ -491,7 +493,7 @@ Matrix.prototype = {
     /**
      * Sets a column at the given index
      * @param {number} index - Column index
-     * @param {array|Matrix} Array or column vector
+     * @param {Array|Matrix} array - Array or column vector
      * @returns {this}
      */
     setColumn: function (index, array) {
@@ -523,7 +525,7 @@ Matrix.prototype = {
     /**
      * Adds a column at the given index
      * @param {number} index - Column index
-     * @param {array|Matrix} Array or column vector
+     * @param {Array|Matrix} array - Array or column vector
      * @returns {this}
      */
     addColumn: function (index, array) {
@@ -574,7 +576,7 @@ Matrix.prototype = {
     },
     /**
      * Adds the values of a row vector to each row
-     * @param {array|Matrix} vector - Array or row vector
+     * @param {Array|Matrix} vector - Array or row vector
      * @returns {this}
      */
     addRowVector: function (vector) {
@@ -585,7 +587,7 @@ Matrix.prototype = {
     },
     /**
      * Substracts the values of a row vector from each row
-     * @param {array|Matrix} vector - Array or row vector
+     * @param {Array|Matrix} vector - Array or row vector
      * @returns {this}
      */
     subRowVector: function (vector) {
@@ -596,7 +598,7 @@ Matrix.prototype = {
     },
     /**
      * Multiplies the values of a row vector with each row
-     * @param {array|Matrix} vector - Array or row vector
+     * @param {Array|Matrix} vector - Array or row vector
      * @returns {this}
      */
     mulRowVector: function (vector) {
@@ -607,7 +609,7 @@ Matrix.prototype = {
     },
     /**
      * Divides the values of each row by the ones of a row vector
-     * @param {array|Matrix} vector - Array or row vector
+     * @param {Array|Matrix} vector - Array or row vector
      * @returns {this}
      */
     divRowVector: function (vector) {
@@ -618,7 +620,7 @@ Matrix.prototype = {
     },
     /**
      * Adds the values of a column vector to each column
-     * @param {array|Matrix} vector - Array or column vector
+     * @param {Array|Matrix} vector - Array or column vector
      * @returns {this}
      */
     addColumnVector: function (vector) {
@@ -629,7 +631,7 @@ Matrix.prototype = {
     },
     /**
      * Substracts the values of a column vector from each column
-     * @param {array|Matrix} vector - Array or column vector
+     * @param {Array|Matrix} vector - Array or column vector
      * @returns {this}
      */
     subColumnVector: function (vector) {
@@ -640,7 +642,7 @@ Matrix.prototype = {
     },
     /**
      * Multiplies the values of a column vector with each column
-     * @param {array|Matrix} vector - Array or column vector
+     * @param {Array|Matrix} vector - Array or column vector
      * @returns {this}
      */
     mulColumnVector: function (vector) {
@@ -651,7 +653,7 @@ Matrix.prototype = {
     },
     /**
      * Divides the values of each column by the ones of a column vector
-     * @param {array|Matrix} vector - Array or column vector
+     * @param {Array|Matrix} vector - Array or column vector
      * @returns {this}
      */
     divColumnVector: function (vector) {
@@ -667,11 +669,12 @@ Matrix.prototype = {
      * @returns {this}
      */
     mulRow: function (index, value) {
-        checkRowIndex(index);
+        this.checkRowIndex(index);
         var i = 0, l = this.columns;
         for (; i < l; i++) {
             this[index][i] *= value;
         }
+        return this;
     },
     /**
      * Multiplies the values of a column with a scalar
@@ -1021,7 +1024,7 @@ Matrix.prototype = {
     },
     /**
      * Returns a subset of the matrix based on an array of row indices
-     * @param {array} r - Array containing the row indices
+     * @param {Array} r - Array containing the row indices
      * @param {number} startColumn - First column index
      * @param {number} endColumn - Last column index
      * @returns {Matrix}
