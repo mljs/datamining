@@ -1,33 +1,36 @@
 {
-    "name": "datamining",
-    "version": "0.0.1",
-    "description": "Data mining and machine learning tools",
-    "keywords": [
-        "datamining",
-        "data",
-        "mining",
-        "machine",
-        "learning",
-        "matrix",
-        "PCA",
-        "clustering",
-        "classification",
-        "regression",
-        "decomposition"
-    ],
-    "homepage": "https://github.com/targos/datamining",
-    "bugs": "https://github.com/targos/datamining/issues",
-    "license": "MIT",
-    "author": {
-        "name": "Michaël Zasso",
-        "email": "targos@live.com"
-    },
-    "main": "src/main",
-    "repository": "targos/datamining",
-    "dependencies": {
-    },
-    "devDependencies": {
-        "mocha": "^1.21.4",
-        "should": "^4.0.4"
+  "name": "datamining",
+  "version": "0.0.1",
+  "description": "Data mining and machine learning tools",
+  "keywords": [
+    "datamining",
+    "data",
+    "mining",
+    "machine",
+    "learning",
+    "matrix",
+    "PCA",
+    "clustering",
+    "classification",
+    "regression",
+    "decomposition"
+  ],
+  "homepage": "https://github.com/targos/datamining",
+  "bugs": "https://github.com/targos/datamining/issues",
+  "license": "MIT",
+  "author": {
+    "name": "Michaël Zasso",
+    "email": "michael.zasso@epfl.ch"
+  },
+  "main": "src",
+  "repository": "targos/datamining",
+  "dependencies": {},
+  "devDependencies": {
+    "mocha": "^1.21.4",
+    "should": "^4.0.4",
+    "urequire": "^0.6.19"
+  },
+    "scripts": {
+        "test": "mocha -R spec"
     }
 }
