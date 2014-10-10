@@ -236,7 +236,7 @@ Matrix.prototype = {
     /**
      * Applies a callback for each element of the matrix.
      * @param {function} callback - Function that will be called with two parameters : i (index of the row) and j (index of the column)
-     * @returns {this}
+     * @returns {Matrix} this
      */
     apply: function (callback) {
         var ii = this.rows, jj = this.columns;
@@ -350,7 +350,7 @@ Matrix.prototype = {
     /**
      * Adds a scalar or values from another Matrix (in place)
      * @param {number|Matrix} value
-     * @returns {this}
+     * @returns {Matrix} this
      */
     add: function (value) {
         if (typeof value === 'number')
@@ -372,7 +372,7 @@ Matrix.prototype = {
     /**
      * Substracts a scalar or values from another Matrix (in place)
      * @param {number|Matrix} value
-     * @returns {this}
+     * @returns {Matrix} this
      */
     sub: function (value) {
         if (typeof value === 'number')
@@ -394,7 +394,7 @@ Matrix.prototype = {
     /**
      * Multiplies a scalar or values from another Matrix (in place)
      * @param {number|Matrix} value
-     * @returns {this}
+     * @returns {Matrix} this
      */
     mul: function (value) {
         if (typeof value === 'number')
@@ -416,7 +416,7 @@ Matrix.prototype = {
     /**
      * Divides a scalar or values from another Matrix (in place)
      * @param {number|Matrix} value
-     * @returns {this}
+     * @returns {Matrix} this
      */
     div: function (value) {
         if (typeof value === 'number')
@@ -448,7 +448,7 @@ Matrix.prototype = {
      * Sets a row at the given index
      * @param {number} index - Row index
      * @param {Array|Matrix} array - Array or row vector
-     * @returns {this}
+     * @returns {Matrix} this
      */
     setRow: function (index, array) {
         this.checkRowIndex(index);
@@ -461,7 +461,7 @@ Matrix.prototype = {
     /**
      * Removes a row from the given index
      * @param {number} index - Row index
-     * @returns {this}
+     * @returns {Matrix} this
      */
     removeRow: function (index) {
         this.checkRowIndex(index);
@@ -475,7 +475,7 @@ Matrix.prototype = {
      * Adds a row at the given index
      * @param {number} index - Row index
      * @param {Array|Matrix} array - Array or row vector
-     * @returns {this}
+     * @returns {Matrix} this
      */
     addRow: function (index, array) {
         if (index < 0 || index > this.rows)
@@ -491,7 +491,7 @@ Matrix.prototype = {
      * Swaps two rows
      * @param {number} row1 - First row index
      * @param {number} row2 - Second row index
-     * @returns {this}
+     * @returns {Matrix} this
      */
     swapRows: function (row1, row2) {
         this.checkRowIndex(row1);
@@ -518,7 +518,7 @@ Matrix.prototype = {
      * Sets a column at the given index
      * @param {number} index - Column index
      * @param {Array|Matrix} array - Array or column vector
-     * @returns {this}
+     * @returns {Matrix} this
      */
     setColumn: function (index, array) {
         this.checkColumnIndex(index);
@@ -534,7 +534,7 @@ Matrix.prototype = {
     /**
      * Removes a column from the given index
      * @param {number} index - Column index
-     * @returns {this}
+     * @returns {Matrix} this
      */
     removeColumn: function (index) {
         this.checkColumnIndex(index);
@@ -550,7 +550,7 @@ Matrix.prototype = {
      * Adds a column at the given index
      * @param {number} index - Column index
      * @param {Array|Matrix} array - Array or column vector
-     * @returns {this}
+     * @returns {Matrix} this
      */
     addColumn: function (index, array) {
         if (index < 0 || index > this.columns)
@@ -569,7 +569,7 @@ Matrix.prototype = {
      * Swaps two columns
      * @param {number} column1 - First column index
      * @param {number} column2 - Second column index
-     * @returns {this}
+     * @returns {Matrix} this
      */
     swapColumns: function (column1, column2) {
         this.checkRowIndex(column1);
@@ -601,7 +601,7 @@ Matrix.prototype = {
     /**
      * Adds the values of a row vector to each row
      * @param {Array|Matrix} vector - Array or row vector
-     * @returns {this}
+     * @returns {Matrix} this
      */
     addRowVector: function (vector) {
         vector = this.checkRowVector(vector);
@@ -612,7 +612,7 @@ Matrix.prototype = {
     /**
      * Substracts the values of a row vector from each row
      * @param {Array|Matrix} vector - Array or row vector
-     * @returns {this}
+     * @returns {Matrix} this
      */
     subRowVector: function (vector) {
         vector = this.checkRowVector(vector);
@@ -623,7 +623,7 @@ Matrix.prototype = {
     /**
      * Multiplies the values of a row vector with each row
      * @param {Array|Matrix} vector - Array or row vector
-     * @returns {this}
+     * @returns {Matrix} this
      */
     mulRowVector: function (vector) {
         vector = this.checkRowVector(vector);
@@ -634,7 +634,7 @@ Matrix.prototype = {
     /**
      * Divides the values of each row by the ones of a row vector
      * @param {Array|Matrix} vector - Array or row vector
-     * @returns {this}
+     * @returns {Matrix} this
      */
     divRowVector: function (vector) {
         vector = this.checkRowVector(vector);
@@ -645,7 +645,7 @@ Matrix.prototype = {
     /**
      * Adds the values of a column vector to each column
      * @param {Array|Matrix} vector - Array or column vector
-     * @returns {this}
+     * @returns {Matrix} this
      */
     addColumnVector: function (vector) {
         vector = this.checkColumnVector(vector);
@@ -656,7 +656,7 @@ Matrix.prototype = {
     /**
      * Substracts the values of a column vector from each column
      * @param {Array|Matrix} vector - Array or column vector
-     * @returns {this}
+     * @returns {Matrix} this
      */
     subColumnVector: function (vector) {
         vector = this.checkColumnVector(vector);
@@ -667,7 +667,7 @@ Matrix.prototype = {
     /**
      * Multiplies the values of a column vector with each column
      * @param {Array|Matrix} vector - Array or column vector
-     * @returns {this}
+     * @returns {Matrix} this
      */
     mulColumnVector: function (vector) {
         vector = this.checkColumnVector(vector);
@@ -678,7 +678,7 @@ Matrix.prototype = {
     /**
      * Divides the values of each column by the ones of a column vector
      * @param {Array|Matrix} vector - Array or column vector
-     * @returns {this}
+     * @returns {Matrix} this
      */
     divColumnVector: function (vector) {
         vector = this.checkColumnVector(vector);
@@ -690,7 +690,7 @@ Matrix.prototype = {
      * Multiplies the values of a row with a scalar
      * @param {number} index - Row index
      * @param {number} value
-     * @returns {this}
+     * @returns {Matrix} this
      */
     mulRow: function (index, value) {
         this.checkRowIndex(index);
@@ -704,7 +704,7 @@ Matrix.prototype = {
      * Multiplies the values of a column with a scalar
      * @param {number} index - Column index
      * @param {number} value
-     * @returns {this}
+     * @returns {Matrix} this
      */
     mulColumn: function (index, value) {
         checkColumnIndex(index);
@@ -912,7 +912,7 @@ Matrix.prototype = {
     },
     /**
      * Computes the cumulative sum of the matrix elements (in place, row by row)
-     * @returns {this}
+     * @returns {Matrix} this
      */
     cumulativeSum: function () {
         var sum = 0;
@@ -997,7 +997,7 @@ Matrix.prototype = {
     /**
      * Sorts the rows (in place)
      * @param {function} compareFunction - usual Array.prototype.sort comparison function
-     * @returns {this}
+     * @returns {Matrix} this
      */
     sortRows: function (compareFunction) {
         for (var i = 0, ii = this.rows; i < ii; i++) {
@@ -1008,7 +1008,7 @@ Matrix.prototype = {
     /**
      * Sorts the columns (in place)
      * @param {function} compareFunction - usual Array.prototype.sort comparison function
-     * @returns {this}
+     * @returns {Matrix} this
      */
     sortColumns: function (compareFunction) {
         for (var i = 0, ii = this.columns; i < ii; i++) {
@@ -1086,7 +1086,7 @@ Matrix.prototype = {
     },
     /**
      * Sets each element of the matrix to its absolute value
-     * @returns {this}
+     * @returns {Matrix} this
      */
     abs: function () {
         return this.apply(function (i, j) {
