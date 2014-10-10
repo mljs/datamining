@@ -9,32 +9,48 @@ function MatrixError(message) {
 MatrixError.prototype = new Error;
 MatrixError.prototype.constructor = MatrixError;
 
+function throwError(message) {
+    throw new MatrixError(message);
+}
+
 /**
  * Real matrix.
  * @constructor
- * @param {Array} newData - A 2D array containing data for the matrix.
+ * @param {number|Array} nRows - Number of rows of the new matrix or a 2D array containing the data.
+ * @param {number} [nColumns] - Number of columns of the new matrix
  */
-function Matrix(newData) {
-    if (newData instanceof Matrix) return newData;
-    var rows, columns, i = 0;
-
-    rows = newData.length;
-    columns = newData[0].length;
-
-    if (columns === undefined)
-        throw new MatrixError("Data must be a 2D array.");
-
-    for (; i < rows; i++) {
-        if (newData[i].length !== columns)
-            throw new MatrixError("Inconsistent array dimensions");
+function Matrix(nRows, nColumns) {
+    var i = 0, rows, columns, matrix;
+    if (nRows instanceof Array) {
+        matrix = nRows;
+        nRows = matrix.length;
+        nColumns = matrix[0].length;
+        if (typeof nColumns === 'undefined') {
+            throwError('Data must be a 2D array');
+        }
+        for (; i < nRows; i++) {
+            if (matrix[i].length !== nColumns)
+                throwError('Inconsistent array dimensions');
+        }
+    } else if (typeof nRows === 'number') { // Create empty matrix
+        if (nRows > 0 && nColumns > 0) {
+            matrix = new Array(nRows);
+            for (; i < nRows; i++) {
+                matrix[i] = new Array(nColumns);
+            }
+        } else {
+            throwError('Invalid dimensions: ' + nRows + 'x' + nColumns);
+        }
+    } else {
+        throwError('Invalid arguments')
     }
 
-    Object.defineProperty(newData, "rows", {writable: true, value: rows});
-    Object.defineProperty(newData, "columns", {writable: true, value: columns});
+    Object.defineProperty(matrix, 'rows', {writable: true, value: nRows});
+    Object.defineProperty(matrix, 'columns', {writable: true, value: nColumns});
 
-    newData.__proto__ = Matrix.prototype;
+    matrix.__proto__ = Matrix.prototype;
 
-    return newData;
+    return matrix;
 }
 
 /**
@@ -42,13 +58,14 @@ function Matrix(newData) {
  * @param {number} newRows - Number of rows
  * @param {number} newColumns - Number of columns
  * @param {Array} newData - A 1D array containing data for the matrix
+ * @returns {Matrix} - The new matrix
  */
 Matrix.from1DArray = function (newRows, newColumns, newData) {
     var length, data, i = 0;
 
     length = newRows * newColumns;
     if (length !== newData.length)
-        throw new MatrixError("Data length does not match given dimensions.");
+        throwError('Data length does not match given dimensions');
 
     data = new Array(newRows);
     for (; i < newRows; i++) {
@@ -60,6 +77,7 @@ Matrix.from1DArray = function (newRows, newColumns, newData) {
 /**
  * Creates a row vector, a matrix with only one row.
  * @param {Array} newData - A 1D array containing data for the vector
+ * @returns {Matrix} - The new matrix
  */
 Matrix.rowVector = function (newData) {
     return new Matrix([newData]);
@@ -68,6 +86,7 @@ Matrix.rowVector = function (newData) {
 /**
  * Creates a column vector, a matrix with only one column.
  * @param {Array} newData - A 1D array containing data for the vector
+ * @returns {Matrix} - The new matrix
  */
 Matrix.columnVector = function (newData) {
     var l = newData.length, vector = new Array(l);
@@ -77,22 +96,20 @@ Matrix.columnVector = function (newData) {
 };
 
 /**
- * Creates an empty matrix with the given dimensions. Values will be undefined.
+ * Creates an empty matrix with the given dimensions. Values will be undefined. Same as using new Matrix(rows, columns).
  * @param {number} rows - Number of rows
  * @param {number} columns - Number of columns
+ * @returns {Matrix} - The new matrix
  */
 Matrix.empty = function (rows, columns) {
-    var array = new Array(rows);
-    for (var i = 0; i < rows; i++) {
-        array[i] = new Array(columns);
-    }
-    return new Matrix(array);
+    return new Matrix(rows, columns);
 };
 
 /**
  * Creates a matrix with the given dimensions. Values will be set to zero.
  * @param {number} rows - Number of rows
  * @param {number} columns - Number of columns
+ * @returns {Matrix} - The new matrix
  */
 Matrix.zeros = function (rows, columns) {
     return Matrix.empty(rows, columns).fill(0);
@@ -102,6 +119,7 @@ Matrix.zeros = function (rows, columns) {
  * Creates a matrix with the given dimensions. Values will be set to one.
  * @param {number} rows - Number of rows
  * @param {number} columns - Number of columns
+ * @returns {Matrix} - The new matrix
  */
 Matrix.ones = function (rows, columns) {
     return Matrix.empty(rows, columns).fill(1);
@@ -111,17 +129,22 @@ Matrix.ones = function (rows, columns) {
  * Creates a matrix with the given dimensions. Values will be randomly set using Math.random().
  * @param {number} rows - Number of rows
  * @param {number} columns - Number of columns
+ * @returns {Matrix} The new matrix
  */
 Matrix.rand = function (rows, columns) {
     var matrix = Matrix.empty(rows, columns);
-    return matrix.apply(function (i, j) {
-        this[i][j] = Math.random();
-    });
+    for(var i = 0, ii = matrix.rows; i < ii; i++) {
+        for(var j = 0, jj = matrix.columns; j < jj; j++) {
+            matrix[i][j] = Math.random();
+        }
+    }
+    return matrix;
 };
 
 /**
- * Creates an identity matrix with the given dimension. Values of the diagonal will be 1 and other will be 0;
+ * Creates an identity matrix with the given dimension. Values of the diagonal will be 1 and other will be 0.
  * @param {number} n - Number of rows and columns
+ * @returns {Matrix} - The new matrix
  */
 Matrix.eye = function (n) {
     var matrix = Matrix.zeros(n, n), l = matrix.rows;
@@ -134,6 +157,7 @@ Matrix.eye = function (n) {
 /**
  * Creates a diagonal matrix based on the given array.
  * @param {Array} data - Array containing the data for the diagonal
+ * @returns {Matrix} - The new matrix
  */
 Matrix.diag = function (data) {
     var l = data.length, matrix = Matrix.zeros(l, l);
@@ -199,15 +223,15 @@ Matrix.prototype = {
     /* Internal methods */
     checkRowIndex: function (index) {
         if (index < 0 || index > this.rows - 1)
-            throw new MatrixError("Row index out of range.");
+            throwError('Row index out of range.');
     },
     checkColumnIndex: function (index) {
         if (index < 0 || index > this.columns - 1)
-            throw new MatrixError("Column index out of range.");
+            throwError('Column index out of range.');
     },
     checkDimensions: function (otherMatrix) {
         if ((this.rows !== otherMatrix.rows) || (this.columns !== otherMatrix.columns))
-            throw new MatrixError("Matrices dimensions must be equal.");
+            throwError('Matrices dimensions must be equal.');
     },
     /**
      * Applies a callback for each element of the matrix.
@@ -329,7 +353,7 @@ Matrix.prototype = {
      * @returns {this}
      */
     add: function (value) {
-        if (typeof value === "number")
+        if (typeof value === 'number')
             return this.addS(value);
         if (value instanceof Matrix)
             return this.addM(value);
@@ -351,7 +375,7 @@ Matrix.prototype = {
      * @returns {this}
      */
     sub: function (value) {
-        if (typeof value === "number")
+        if (typeof value === 'number')
             return this.subS(value);
         if (value instanceof Matrix)
             return this.subM(value);
@@ -373,7 +397,7 @@ Matrix.prototype = {
      * @returns {this}
      */
     mul: function (value) {
-        if (typeof value === "number")
+        if (typeof value === 'number')
             return this.mulS(value);
         if (value instanceof Matrix)
             return this.mulM(value);
@@ -395,7 +419,7 @@ Matrix.prototype = {
      * @returns {this}
      */
     div: function (value) {
-        if (typeof value === "number")
+        if (typeof value === 'number')
             return this.divS(value);
         if (value instanceof Matrix)
             return this.divM(value);
@@ -430,7 +454,7 @@ Matrix.prototype = {
         this.checkRowIndex(index);
         if (!(array instanceof Matrix)) array = Matrix.rowVector(array);
         if (array.columns !== this.columns)
-            throw new MatrixError("Invalid row size");
+            throwError('Invalid row size');
         this[index] = array[0].slice();
         return this;
     },
@@ -442,7 +466,7 @@ Matrix.prototype = {
     removeRow: function (index) {
         this.checkRowIndex(index);
         if (this.rows === 1)
-            throw new MatrixError("A matrix cannot have less than one row");
+            throwError('A matrix cannot have less than one row');
         Asplice.call(this, index, 1);
         this.rows -= 1;
         return this;
@@ -455,10 +479,10 @@ Matrix.prototype = {
      */
     addRow: function (index, array) {
         if (index < 0 || index > this.rows)
-            throw new MatrixError("Row index out of range.");
+            throwError('Row index out of range.');
         if (!(array instanceof Matrix)) array = Matrix.rowVector(array);
         if (array.columns !== this.columns)
-            throw new MatrixError("Invalid row size");
+            throwError('Invalid row size');
         Asplice.call(this, index, 0, array[0].slice());
         this.rows += 1;
         return this;
@@ -501,7 +525,7 @@ Matrix.prototype = {
         if (!(array instanceof Matrix)) array = Matrix.columnVector(array);
         var l = this.rows;
         if (array.rows !== l)
-            throw new MatrixError("Invalid column size");
+            throwError('Invalid column size');
         for (var i = 0; i < l; i++) {
             this[i][index] = array[i][0];
         }
@@ -515,7 +539,7 @@ Matrix.prototype = {
     removeColumn: function (index) {
         this.checkColumnIndex(index);
         if (this.columns === 1)
-            throw new MatrixError("A matrix cannot have less than one column");
+            throwError('A matrix cannot have less than one column');
         for (var i = 0, ii = this.rows; i < ii; i++) {
             this[i].splice(index, 1);
         }
@@ -530,11 +554,11 @@ Matrix.prototype = {
      */
     addColumn: function (index, array) {
         if (index < 0 || index > this.columns)
-            throw new MatrixError("Column index out of range.");
+            throwError('Column index out of range.');
         if (!(array instanceof Matrix)) array = Matrix.columnVector(array);
         var l = this.rows;
         if (array.rows !== l)
-            throw new MatrixError("Invalid column size");
+            throwError('Invalid column size');
         for (var i = 0; i < l; i++) {
             this[i].splice(index, 0, array[i][0]);
         }
@@ -564,14 +588,14 @@ Matrix.prototype = {
         if (vector instanceof Matrix && vector.isRowVector())
             vector = vector.getRow(0);
         if (vector.length !== this.columns)
-            throw new MatrixError("vector size must be the same as the number of columns");
+            throwError('vector size must be the same as the number of columns');
         return vector;
     },
     checkColumnVector: function (vector) {
         if (vector instanceof Matrix && vector.isColumnVector())
             vector = vector.getColumn(0);
         if (vector.length !== this.rows)
-            throw new MatrixError("vector size must be the same as the number of rows");
+            throwError('vector size must be the same as the number of rows');
         return vector;
     },
     /**
@@ -839,7 +863,7 @@ Matrix.prototype = {
      */
     diag: function () {
         if (!this.isSquare())
-            throw new MatrixError("Only square matrices have a diagonal.");
+            throwError('Only square matrices have a diagonal.');
         var diag = Array(this.rows);
         for (var i = 0, ii = this.rows; i < ii; i++) {
             diag[i] = this[i][i];
@@ -904,7 +928,7 @@ Matrix.prototype = {
      */
     dot: function (other) {
         if (this.size !== other.size)
-            throw new MatrixError("Vectors do not have the same size.");
+            throwError('Vectors do not have the same size.');
         var vector1 = this.to1DArray();
         var vector2 = other.to1DArray();
         var dot = 0, l = vector1.length;
@@ -948,7 +972,7 @@ Matrix.prototype = {
      */
     mmul: function (other) {
         if (this.columns !== other.rows)
-            console.warn("Number of columns of left matrix are not equal to number of rows of right matrix.");
+            console.warn('Number of columns of left matrix are not equal to number of rows of right matrix.');
 
         var m = this.rows, n = this.columns, p = other.columns;
         var result = Matrix.empty(m, p);
@@ -1013,7 +1037,7 @@ Matrix.prototype = {
      */
     subMatrix: function (startRow, endRow, startColumn, endColumn) {
         if ((startRow > endRow) || (startColumn > endColumn) || (startRow < 0) || (startRow >= this.rows) || (endRow < 0) || (endRow >= this.rows) || (startColumn < 0) || (startColumn >= this.columns) || (endColumn < 0) || (endColumn >= this.columns))
-            throw new MatrixError("Argument out of range");
+            throwError('Argument out of range');
         var newMatrix = Matrix.empty(endRow - startRow + 1, endColumn - startColumn + 1);
         for (var i = startRow; i <= endRow; i++) {
             for (var j = startColumn; j <= endColumn; j++) {
@@ -1030,18 +1054,18 @@ Matrix.prototype = {
      * @returns {Matrix}
      */
     subMatrixRow: function (r, startColumn, endColumn) {
-        if (typeof startColumn === "undefined") {
+        if (typeof startColumn === 'undefined') {
             startColumn = 0;
             endColumn = this.columns - 1;
         }
         if ((startColumn > endColumn) || (startColumn < 0) || (startColumn >= this.columns) || (endColumn < 0) || (endColumn >= this.columns))
-            throw new MatrixError("Argument out of range.");
+            throwError('Argument out of range.');
         var l = r.length, rows = this.rows,
             X = Matrix.empty(l, endColumn - startColumn + 1);
         for (var i = 0; i < l; i++) {
             for (var j = startColumn; j <= endColumn; j++) {
                 if ((r[i] < 0) || (r[i] >= rows))
-                    throw new MatrixError("Argument out of range.");
+                    throwError('Argument out of range.');
                 X[i][j - startColumn] = this[r[i]][j];
             }
         }
@@ -1053,7 +1077,7 @@ Matrix.prototype = {
      */
     trace: function () {
         if (!this.isSquare())
-            throw new MatrixError("The matrix is not square");
+            throwError('The matrix is not square');
         var trace = 0, i = 0, l = this.rows;
         for (; i < l; i++) {
             trace += this[i][i];
