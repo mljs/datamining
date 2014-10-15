@@ -770,111 +770,124 @@ function LuDecomposition(matrix) {
     if (!(matrix instanceof Matrix))
         throw "Argument has to be a Matrix";
 
-    this.LU = matrix.clone();
-    var lu = this.LU;
-    var rows = matrix.rows;
-    var columns = matrix.columns;
-    var pivotVector = new Array(rows);
-    for (var i = 0; i < rows; i++) {
+    var lu = matrix.clone(),
+        rows = lu.rows,
+        columns = lu.columns,
+        pivotVector = new Array(rows),
+        pivotSign = 1,
+        i, j, k, p, s, t, v,
+        LUrowi, LUcolj, kmax;
+
+    for (i = 0; i < rows; i++) {
         pivotVector[i] = i;
     }
 
-    var pivotSign = 1;
-    var LUrowi;
-    var LUcolj = new Array(rows);
+    LUcolj = new Array(rows);
 
-    for (var j = 0; j < columns; j++) {
+    for (j = 0; j < columns; j++) {
 
-        for (var i = 0; i < rows; i++) {
+        for (i = 0; i < rows; i++) {
             LUcolj[i] = lu[i][j];
         }
 
-        for (var i = 0; i < rows; i++) {
+        for (i = 0; i < rows; i++) {
             LUrowi = lu[i];
-            var kmax = Math.min(i, j)
-            var s = 0;
-            for (var k = 0; k < kmax; k++) {
+            kmax = Math.min(i, j);
+            s = 0;
+            for (k = 0; k < kmax; k++) {
                 s += LUrowi[k] * LUcolj[k];
             }
             LUrowi[j] = LUcolj[i] -= s;
         }
 
-        var p = j;
-        for (var i = j + 1; i < rows; i++) {
+        p = j;
+        for (i = j + 1; i < rows; i++) {
             if (Math.abs(LUcolj[i]) > Math.abs(LUcolj[p])) {
                 p = i;
             }
         }
 
         if (p !== j) {
-            for (var k = 0; k < columns; k++) {
-                var t = lu[p][k];
+            for (k = 0; k < columns; k++) {
+                t = lu[p][k];
                 lu[p][k] = lu[j][k];
                 lu[j][k] = t;
             }
 
-            var v = pivotVector[p];
+            v = pivotVector[p];
             pivotVector[p] = pivotVector[j];
             pivotVector[j] = v;
 
             pivotSign = -pivotSign;
         }
 
-        if (j < rows & lu[j][j] !== 0) {
-            for (var i = j + 1; i < rows; i++) {
+        if (j < rows && lu[j][j] !== 0) {
+            for (i = j + 1; i < rows; i++) {
                 lu[i][j] /= lu[j][j];
             }
         }
     }
-    this.pivotVector = pivotVector;
-    this.pivotSign = pivotSign;
+
+    return new LuDecompositionResult(lu, pivotVector, pivotSign);
+
 }
 
-LuDecomposition.prototype = {
-    isNonSingular: function () {
-        var col = this.LU.columns;
-        var data = this.LU;
-        for (var j = 0; j < col; j++)
-            if (data[j][j] === 0)
-                return false;
-        return true;
+function LuDecompositionResult(lu, vector, sign) {
+    this.LU = lu;
+    this.pivotVector = vector;
+    this.pivotSign = sign;
+}
+
+LuDecompositionResult.prototype = {
+    isSingular: function () {
+        var data = this.LU,
+            col = data.columns;
+        for (var j = 0; j < col; j++) {
+            if (data[j][j] === 0) {
+                return true;
+            }
+        }
+        return false;
     },
     get determinant() {
-        if (!this.LU.isSquare())
+        var data = this.LU;
+        if (!data.isSquare())
             throw "Matrix must be square";
-        var determinant = this.pivotSign, col = this.LU.columns, data = this.LU;
+        var determinant = this.pivotSign, col = data.columns;
         for (var j = 0; j < col; j++)
             determinant *= data[j][j];
         return determinant;
     },
     get lowerTriangularFactor() {
-        var rows = this.LU.rows;
-        var columns = this.LU.columns;
-        var X = Matrix.empty(rows, columns);
-        var data = this.LU;
+        var data = this.LU,
+            rows = data.rows,
+            columns = data.columns,
+            X = new Matrix(rows, columns);
         for (var i = 0; i < rows; i++) {
             for (var j = 0; j < columns; j++) {
-                if (i > j)
+                if (i > j) {
                     X[i][j] = data[i][j];
-                else if (i === j)
+                } else if (i === j) {
                     X[i][j] = 1;
-                else
+                } else {
                     X[i][j] = 0;
+                }
             }
         }
         return X;
     },
     get upperTriangularFactor() {
-        var rows = this.LU.rows;
-        var columns = this.LU.columns;
-        var X = Matrix.empty(rows, columns);
-        var data = this.LU;
+        var data = this.LU,
+            rows = data.rows,
+            columns = data.columns,
+            X = new Matrix(rows, columns);
         for (var i = 0; i < rows; i++) {
             for (var j = 0; j < columns; j++) {
-                if (i <= j)
+                if (i <= j) {
                     X[i][j] = data[i][j];
-                else
+                } else {
                     X[i][j] = 0;
+                }
             }
         }
         return X;
@@ -884,31 +897,34 @@ LuDecomposition.prototype = {
     },
     solve: function (value) {
         if (!(value instanceof Matrix))
-            throw "Argument has to be a Matrix.";
-        if (this.LU.rows !== value.rows)
-            throw "Invalid matrix dimensions.";
-        if (!this.isNonSingular())
-            throw "Matrix is singular.";
+            throw "Argument has to be a Matrix";
 
-        var count = value.columns;
-        var X = value.subMatrixRow(this.pivotVector, 0, count - 1);
-        var rows = this.LU.rows;
-        var columns = this.LU.columns;
-        var lu = this.LU;
+        var lu = this.LU,
+            rows = lu.rows;
 
-        for (var k = 0; k < columns; k++) {
-            for (var i = k + 1; i < columns; i++) {
-                for (var j = 0; j < count; j++) {
+        if (rows !== value.rows)
+            throw "Invalid matrix dimensions";
+        if (this.isSingular())
+            throw "LU matrix is singular";
+
+        var count = value.columns,
+            X = value.subMatrixRow(this.pivotVector, 0, count - 1),
+            columns = lu.columns,
+            i, j, k;
+
+        for (k = 0; k < columns; k++) {
+            for (i = k + 1; i < columns; i++) {
+                for (j = 0; j < count; j++) {
                     X[i][j] -= X[k][j] * lu[i][k];
                 }
             }
         }
-        for (var k = columns - 1; k >= 0; k--) {
-            for (var j = 0; j < count; j++) {
+        for (k = columns - 1; k >= 0; k--) {
+            for (j = 0; j < count; j++) {
                 X[k][j] /= lu[k][k];
             }
-            for (var i = 0; i < k; i++) {
-                for (var j = 0; j < count; j++) {
+            for (i = 0; i < k; i++) {
+                for (j = 0; j < count; j++) {
                     X[i][j] -= X[k][j] * lu[i][k];
                 }
             }
