@@ -7,87 +7,88 @@ function EigenvalueDecomposition(matrix) {
     if (!(matrix instanceof Matrix)) {
         matrix = new Matrix(matrix);
     }
-    if (!matrix.isSquare())
-        throw "Matrix is not a square matrix.";
+    if (!matrix.isSquare()) {
+        throw "Matrix is not a square matrix";
+    }
 
-    var n = matrix.columns;
-    this.n = n;
-    var V = Matrix.zeros(n, n);
-    this.V = V;
-    this.d = new Array(n);
-    this.e = new Array(n);
+    var n = matrix.columns,
+        V = Matrix.zeros(n, n),
+        d = new Array(n),
+        e = new Array(n),
+        value = matrix,
+        i, j;
 
-    var value = matrix;
-
-    this.symmetric = matrix.isSymmetric();
-    if (this.symmetric) {
-        for (var i = 0; i < n; i++) {
-            for (var j = 0; j < n; j++) {
+    if (matrix.isSymmetric()) {
+        for (i = 0; i < n; i++) {
+            for (j = 0; j < n; j++) {
                 V[i][j] = value[i][j];
             }
         }
-        tred2(this);
-        tql2(this);
+        tred2(n, e, d, V);
+        tql2(n, e, d, V);
     }
     else {
-        var H = Matrix.zeros(n, n);
-        this.H = H;
-        this.ort = new Array(n);
-
-        for (var j = 0; j < n; j++) {
-            for (var i = 0; i < n; i++) {
+        var H = Matrix.zeros(n, n),
+            ort = new Array(n);
+        for (j = 0; j < n; j++) {
+            for (i = 0; i < n; i++) {
                 H[i][j] = value[i][j];
             }
         }
-        orthes(this);
-        hqr2(this);
+        orthes(n, H, ort, V);
+        hqr2(n, e, d, V, H);
     }
+
+    return new EigenvalueDecompositionResult(n, e, d, V);
 }
 
-function tred2(evd) {
-    var n = evd.n;
-    var d = evd.d;
-    var e = evd.e;
-    var V = evd.V;
+function tred2(n, e, d, V) {
 
-    for (var j = 0; j < n; j++)
+    var f, g, h, i, j, k,
+        hh, scale;
+
+    for (j = 0; j < n; j++) {
         d[j] = V[n - 1][j];
+    }
 
-    for (var i = n - 1; i > 0; i--) {
-        var scale = 0;
-        var h = 0;
-        for (var k = 0; k < i; k++)
+    for (i = n - 1; i > 0; i--) {
+        scale = 0;
+        h = 0;
+        for (k = 0; k < i; k++) {
             scale = scale + Math.abs(d[k]);
+        }
 
         if (scale === 0) {
             e[i] = d[i - 1];
-            for (var j = 0; j < i; j++) {
+            for (j = 0; j < i; j++) {
                 d[j] = V[i - 1][j];
                 V[i][j] = 0;
                 V[j][i] = 0;
             }
-        }
-        else {
-            for (var k = 0; k < i; k++) {
+        } else {
+            for (k = 0; k < i; k++) {
                 d[k] /= scale;
                 h += d[k] * d[k];
             }
 
-            var f = d[i - 1];
-            var g = Math.sqrt(h);
-            if (f > 0) g = -g;
+            f = d[i - 1];
+            g = Math.sqrt(h);
+            if (f > 0) {
+                g = -g;
+            }
 
             e[i] = scale * g;
             h = h - f * g;
             d[i - 1] = f - g;
-            for (var j = 0; j < i; j++)
+            for (j = 0; j < i; j++) {
                 e[j] = 0;
+            }
 
-            for (var j = 0; j < i; j++) {
+            for (j = 0; j < i; j++) {
                 f = d[j];
                 V[j][i] = f;
                 g = e[j] + V[j][j] * f;
-                for (var k = j + 1; k <= i - 1; k++) {
+                for (k = j + 1; k <= i - 1; k++) {
                     g += V[k][j] * d[k];
                     e[k] += V[k][j] * f;
                 }
@@ -95,21 +96,22 @@ function tred2(evd) {
             }
 
             f = 0;
-            for (var j = 0; j < i; j++) {
+            for (j = 0; j < i; j++) {
                 e[j] /= h;
                 f += e[j] * d[j];
             }
 
-            var hh = f / (h + h);
-            for (var j = 0; j < i; j++)
+            hh = f / (h + h);
+            for (j = 0; j < i; j++) {
                 e[j] -= hh * d[j];
+            }
 
-            for (var j = 0; j < i; j++) {
+            for (j = 0; j < i; j++) {
                 f = d[j];
                 g = e[j];
-                for (var k = j; k <= i - 1; k++)
+                for (k = j; k <= i - 1; k++) {
                     V[k][j] -= (f * e[k] + g * d[k]);
-
+                }
                 d[j] = V[i - 1][j];
                 V[i][j] = 0;
             }
@@ -117,28 +119,32 @@ function tred2(evd) {
         d[i] = h;
     }
 
-    for (var i = 0; i < n - 1; i++) {
+    for (i = 0; i < n - 1; i++) {
         V[n - 1][i] = V[i][i];
         V[i][i] = 1;
-        var h = d[i + 1];
+        h = d[i + 1];
         if (h !== 0) {
-            for (var k = 0; k <= i; k++)
+            for (k = 0; k <= i; k++) {
                 d[k] = V[k][i + 1] / h;
+            }
 
-            for (var j = 0; j <= i; j++) {
-                var g = 0;
-                for (var k = 0; k <= i; k++)
+            for (j = 0; j <= i; j++) {
+                g = 0;
+                for (k = 0; k <= i; k++) {
                     g += V[k][i + 1] * V[k][j];
-                for (var k = 0; k <= i; k++)
+                }
+                for (k = 0; k <= i; k++) {
                     V[k][j] -= g * d[k];
+                }
             }
         }
 
-        for (var k = 0; k <= i; k++)
+        for (k = 0; k <= i; k++) {
             V[k][i + 1] = 0;
+        }
     }
 
-    for (var j = 0; j < n; j++) {
+    for (j = 0; j < n; j++) {
         d[j] = V[n - 1][j];
         V[n - 1][j] = 0;
     }
@@ -147,60 +153,62 @@ function tred2(evd) {
     e[0] = 0;
 }
 
-function tql2(evd) {
-    var n = evd.n;
-    var e = evd.e;
-    var d = evd.d;
-    var V = evd.V;
+function tql2(n, e, d, V) {
 
-    for (var i = 1; i < n; i++)
+    var g, h, i, j, k, l, m, p, r,
+        dl1, c, c2, c3, el1, s, s2,
+        iter;
+
+    for (i = 1; i < n; i++) {
         e[i - 1] = e[i];
+    }
 
     e[n - 1] = 0;
 
-    var f = 0;
-    var tst1 = 0;
-    var eps = Math.pow(2, -52);
+    var f = 0,
+        tst1 = 0,
+        eps = Math.pow(2, -52);
 
-    for (var l = 0; l < n; l++) {
+    for (l = 0; l < n; l++) {
         tst1 = Math.max(tst1, Math.abs(d[l]) + Math.abs(e[l]));
-        var m = l;
+        m = l;
         while (m < n) {
-            if (Math.abs(e[m]) <= eps * tst1)
+            if (Math.abs(e[m]) <= eps * tst1) {
                 break;
+            }
             m++;
         }
 
         if (m > l) {
-            var iter = 0;
+            iter = 0;
             do {
                 iter = iter + 1;
 
-                var g = d[l];
-                var p = (d[l + 1] - g) / (2 * e[l]);
-                var r = hypotenuse(p, 1);
+                g = d[l];
+                p = (d[l + 1] - g) / (2 * e[l]);
+                r = hypotenuse(p, 1);
                 if (p < 0) {
                     r = -r;
                 }
 
                 d[l] = e[l] / (p + r);
                 d[l + 1] = e[l] * (p + r);
-                var dl1 = d[l + 1];
-                var h = g - d[l];
-                for (var i = l + 2; i < n; i++) {
+                dl1 = d[l + 1];
+                h = g - d[l];
+                for (i = l + 2; i < n; i++) {
                     d[i] -= h;
                 }
 
                 f = f + h;
 
                 p = d[m];
-                var c = 1;
-                var c2 = c;
-                var c3 = c;
-                var el1 = e[l + 1];
-                var s = 0;
-                var s2 = 0;
-                for (var i = m - 1; i >= l; i--) {
+                c = 1;
+                c2 = c;
+                c3 = c;
+                el1 = e[l + 1];
+                s = 0;
+                s2 = 0;
+                for (i = m - 1; i >= l; i--) {
                     c3 = c2;
                     c2 = c;
                     s2 = s;
@@ -213,7 +221,7 @@ function tql2(evd) {
                     p = c * d[i] - s * g;
                     d[i + 1] = h + s * (c * g + s * d[i]);
 
-                    for (var k = 0; k < n; k++) {
+                    for (k = 0; k < n; k++) {
                         h = V[k][i + 1];
                         V[k][i + 1] = s * V[k][i] + c * h;
                         V[k][i] = c * V[k][i] - s * h;
@@ -231,10 +239,10 @@ function tql2(evd) {
         e[l] = 0;
     }
 
-    for (var i = 0; i < n - 1; i++) {
-        var k = i;
-        var p = d[i];
-        for (var j = i + 1; j < n; j++) {
+    for (i = 0; i < n - 1; i++) {
+        k = i;
+        p = d[i];
+        for (j = i + 1; j < n; j++) {
             if (d[j] < p) {
                 k = j;
                 p = d[j];
@@ -244,7 +252,7 @@ function tql2(evd) {
         if (k !== i) {
             d[k] = d[i];
             d[i] = p;
-            for (var j = 0; j < n; j++) {
+            for (j = 0; j < n; j++) {
                 p = V[j][i];
                 V[j][i] = V[j][k];
                 V[j][k] = p;
@@ -253,51 +261,56 @@ function tql2(evd) {
     }
 }
 
-function orthes(evd) {
-    var n = evd.n;
-    var H = evd.H;
-    var ort = evd.ort;
-    var V = evd.V
+function orthes(n, H, ort, V) {
 
-    var low = 0;
-    var high = n - 1;
+    var low = 0,
+        high = n - 1,
+        f, g, h, i, j, m,
+        scale;
 
-    for (var m = low + 1; m <= high - 1; m++) {
-        var scale = 0;
-        for (var i = m; i <= high; i++)
+    for (m = low + 1; m <= high - 1; m++) {
+        scale = 0;
+        for (i = m; i <= high; i++) {
             scale = scale + Math.abs(H[i][m - 1]);
+        }
 
         if (scale !== 0) {
-            var h = 0;
-            for (var i = high; i >= m; i--) {
+            h = 0;
+            for (i = high; i >= m; i--) {
                 ort[i] = H[i][m - 1] / scale;
                 h += ort[i] * ort[i];
             }
 
-            var g = Math.sqrt(h);
-            if (ort[m] > 0) g = -g;
+            g = Math.sqrt(h);
+            if (ort[m] > 0) {
+                g = -g;
+            }
 
             h = h - ort[m] * g;
             ort[m] = ort[m] - g;
 
-            for (var j = m; j < n; j++) {
-                var f = 0;
-                for (var i = high; i >= m; i--)
+            for (j = m; j < n; j++) {
+                f = 0;
+                for (i = high; i >= m; i--) {
                     f += ort[i] * H[i][j];
+                }
 
                 f = f / h;
-                for (var i = m; i <= high; i++)
+                for (i = m; i <= high; i++) {
                     H[i][j] -= f * ort[i];
+                }
             }
 
-            for (var i = 0; i <= high; i++) {
-                var f = 0;
-                for (var j = high; j >= m; j--)
+            for (i = 0; i <= high; i++) {
+                f = 0;
+                for (j = high; j >= m; j--) {
                     f += ort[j] * H[i][j];
+                }
 
                 f = f / h;
-                for (var j = m; j <= high; j++)
+                for (j = m; j <= high; j++) {
                     H[i][j] -= f * ort[j];
+                }
             }
 
             ort[m] = scale * ort[m];
@@ -305,70 +318,71 @@ function orthes(evd) {
         }
     }
 
-    for (var i = 0; i < n; i++)
-        for (var j = 0; j < n; j++)
+    for (i = 0; i < n; i++) {
+        for (j = 0; j < n; j++) {
             V[i][j] = (i === j ? 1 : 0);
+        }
+    }
 
-    for (var m = high - 1; m >= low + 1; m--) {
+    for (m = high - 1; m >= low + 1; m--) {
         if (H[m][m - 1] !== 0) {
-            for (var i = m + 1; i <= high; i++)
+            for (i = m + 1; i <= high; i++) {
                 ort[i] = H[i][m - 1];
+            }
 
-            for (var j = m; j <= high; j++) {
-                var g = 0;
-                for (var i = m; i <= high; i++)
+            for (j = m; j <= high; j++) {
+                g = 0;
+                for (i = m; i <= high; i++) {
                     g += ort[i] * V[i][j];
+                }
 
                 g = (g / ort[m]) / H[m][m - 1];
-                for (var i = m; i <= high; i++)
+                for (i = m; i <= high; i++) {
                     V[i][j] += g * ort[i];
+                }
             }
         }
     }
 }
 
-function hqr2(evd) {
-    var nn = evd.n;
-    var n = nn - 1;
-    var low = 0;
-    var high = nn - 1;
-    var eps = Math.pow(2, -52);
-    var exshift = 0;
-    var p = 0;
-    var q = 0;
-    var r = 0;
-    var s = 0;
-    var z = 0;
-    var t;
-    var w;
-    var x;
-    var y;
+function hqr2(nn, e, d, V, H) {
+    var n = nn - 1,
+        low = 0,
+        high = nn - 1,
+        eps = Math.pow(2, -52),
+        exshift = 0,
+        norm = 0,
+        p = 0,
+        q = 0,
+        r = 0,
+        s = 0,
+        z = 0,
+        iter = 0,
+        i, j, k, l, m, t, w, x, y,
+        ra, sa, vr, vi,
+        notlast, cdivres;
 
-    var H = evd.H;
-    var V = evd.V;
-    var d = evd.d;
-    var e = evd.e
-
-    var norm = 0;
-    for (var i = 0; i < nn; i++) {
-        if (i < low | i > high) {
+    for (i = 0; i < nn; i++) {
+        if (i < low || i > high) {
             d[i] = H[i][i];
             e[i] = 0;
         }
 
-        for (var j = Math.max(i - 1, 0); j < nn; j++)
+        for (j = Math.max(i - 1, 0); j < nn; j++) {
             norm = norm + Math.abs(H[i][j]);
+        }
     }
 
-    var iter = 0;
     while (n >= low) {
-        var l = n;
+        l = n;
         while (l > low) {
             s = Math.abs(H[l - 1][l - 1]) + Math.abs(H[l][l]);
-            if (s === 0) s = norm;
-            if (Math.abs(H[l][l - 1]) < eps * s)
+            if (s === 0) {
+                s = norm;
+            }
+            if (Math.abs(H[l][l - 1]) < eps * s) {
                 break;
-
+            }
             l--;
         }
 
@@ -378,8 +392,7 @@ function hqr2(evd) {
             e[n] = 0;
             n--;
             iter = 0;
-        }
-        else if (l === n - 1) {
+        } else if (l === n - 1) {
             w = H[n][n - 1] * H[n - 1][n];
             p = (H[n - 1][n - 1] - H[n][n]) / 2;
             q = p * p + w;
@@ -392,11 +405,12 @@ function hqr2(evd) {
                 z = (p >= 0) ? (p + z) : (p - z);
                 d[n - 1] = x + z;
                 d[n] = d[n - 1];
-                if (z !== 0)
+                if (z !== 0) {
                     d[n] = x - w / z;
+                }
                 e[n - 1] = 0;
                 e[n] = 0;
-                x = H[n, n - 1];
+                x = H[n][n - 1];
                 s = Math.abs(x) + Math.abs(z);
                 p = x / s;
                 q = z / s;
@@ -404,25 +418,24 @@ function hqr2(evd) {
                 p = p / r;
                 q = q / r;
 
-                for (var j = n - 1; j < nn; j++) {
+                for (j = n - 1; j < nn; j++) {
                     z = H[n - 1][j];
                     H[n - 1][j] = q * z + p * H[n][j];
                     H[n][j] = q * H[n][j] - p * z;
                 }
 
-                for (var i = 0; i <= n; i++) {
+                for (i = 0; i <= n; i++) {
                     z = H[i][n - 1];
                     H[i][n - 1] = q * z + p * H[i][n];
                     H[i][n] = q * H[i][n] - p * z;
                 }
 
-                for (var i = low; i <= high; i++) {
+                for (i = low; i <= high; i++) {
                     z = V[i][n - 1];
                     V[i][n - 1] = q * z + p * V[i][n];
                     V[i][n] = q * V[i][n] - p * z;
                 }
-            }
-            else {
+            } else {
                 d[n - 1] = x + p;
                 d[n] = x + p;
                 e[n - 1] = z;
@@ -431,8 +444,7 @@ function hqr2(evd) {
 
             n = n - 2;
             iter = 0;
-        }
-        else {
+        } else {
             x = H[n][n];
             y = 0;
             w = 0;
@@ -443,9 +455,9 @@ function hqr2(evd) {
 
             if (iter === 10) {
                 exshift += x;
-                for (var i = low; i <= n; i++)
+                for (i = low; i <= n; i++) {
                     H[i][i] -= x;
-
+                }
                 s = Math.abs(H[n][n - 1]) + Math.abs(H[n - 1][n - 2]);
                 x = y = 0.75 * s;
                 w = -0.4375 * s * s;
@@ -456,10 +468,13 @@ function hqr2(evd) {
                 s = s * s + w;
                 if (s > 0) {
                     s = Math.sqrt(s);
-                    if (y < x) s = -s;
+                    if (y < x) {
+                        s = -s;
+                    }
                     s = x - w / ((y - x) / 2 + s);
-                    for (var i = low; i <= n; i++)
+                    for (i = low; i <= n; i++) {
                         H[i][i] -= s;
+                    }
                     exshift += s;
                     x = y = w = 0.964;
                 }
@@ -467,7 +482,7 @@ function hqr2(evd) {
 
             iter = iter + 1;
 
-            var m = n - 2;
+            m = n - 2;
             while (m >= l) {
                 z = H[m][m];
                 r = x - z;
@@ -479,21 +494,24 @@ function hqr2(evd) {
                 p = p / s;
                 q = q / s;
                 r = r / s;
-                if (m === l)
+                if (m === l) {
                     break;
-                if (Math.abs(H[m][m - 1]) * (Math.abs(q) + Math.abs(r)) < eps * (Math.abs(p) * (Math.abs(H[m - 1][m - 1]) + Math.abs(z) + Math.Abs(H[m + 1][m + 1]))))
+                }
+                if (Math.abs(H[m][m - 1]) * (Math.abs(q) + Math.abs(r)) < eps * (Math.abs(p) * (Math.abs(H[m - 1][m - 1]) + Math.abs(z) + Math.abs(H[m + 1][m + 1])))) {
                     break;
+                }
                 m--;
             }
 
-            for (var i = m + 2; i <= n; i++) {
+            for (i = m + 2; i <= n; i++) {
                 H[i][i - 2] = 0;
-                if (i > m + 2)
+                if (i > m + 2) {
                     H[i][i - 3] = 0;
+                }
             }
 
-            for (var k = m; k <= n - 1; k++) {
-                var notlast = (k !== n - 1);
+            for (k = m; k <= n - 1; k++) {
+                notlast = (k !== n - 1);
                 if (k !== m) {
                     p = H[k][k - 1];
                     q = H[k + 1][k - 1];
@@ -506,18 +524,21 @@ function hqr2(evd) {
                     }
                 }
 
-                if (x === 0)
+                if (x === 0) {
                     break;
+                }
 
                 s = Math.sqrt(p * p + q * q + r * r);
-                if (p < 0)
+                if (p < 0) {
                     s = -s;
+                }
 
                 if (s !== 0) {
-                    if (k !== m)
+                    if (k !== m) {
                         H[k][k - 1] = -s * x;
-                    else if (l !== m)
+                    } else if (l !== m) {
                         H[k][k - 1] = -H[k][k - 1];
+                    }
 
                     p = p + s;
                     x = p / s;
@@ -526,7 +547,7 @@ function hqr2(evd) {
                     q = q / p;
                     r = r / p;
 
-                    for (var j = k; j < nn; j++) {
+                    for (j = k; j < nn; j++) {
                         p = H[k][j] + q * H[k + 1][j];
                         if (notlast) {
                             p = p + r * H[k + 2][j];
@@ -537,7 +558,7 @@ function hqr2(evd) {
                         H[k + 1][j] = H[k + 1][j] - p * y;
                     }
 
-                    for (var i = 0; i <= Math.min(n, k + 3); i++) {
+                    for (i = 0; i <= Math.min(n, k + 3); i++) {
                         p = x * H[i][k] + y * H[i][k + 1];
                         if (notlast) {
                             p = p + z * H[i][k + 2];
@@ -548,7 +569,7 @@ function hqr2(evd) {
                         H[i][k + 1] = H[i][k + 1] - p * q;
                     }
 
-                    for (var i = low; i <= high; i++) {
+                    for (i = low; i <= high; i++) {
                         p = x * V[i][k] + y * V[i][k + 1];
                         if (notlast) {
                             p = p + z * V[i][k + 2];
@@ -572,24 +593,23 @@ function hqr2(evd) {
         q = e[n];
 
         if (q === 0) {
-            var l = n;
+            l = n;
             H[n][n] = 1;
-            for (var i = n - 1; i >= 0; i--) {
+            for (i = n - 1; i >= 0; i--) {
                 w = H[i][i] - p;
                 r = 0;
-                for (var j = l; j <= n; j++)
+                for (j = l; j <= n; j++) {
                     r = r + H[i][j] * H[j][n];
+                }
 
                 if (e[i] < 0) {
                     z = w;
                     s = r;
-                }
-                else {
+                } else {
                     l = i;
                     if (e[i] === 0) {
                         H[i][n] = (w !== 0) ? (-r / w) : (-r / (eps * norm));
-                    }
-                    else {
+                    } else {
                         x = H[i][i + 1];
                         y = H[i + 1][i];
                         q = (d[i] - p) * (d[i] - p) + e[i] * e[i];
@@ -599,32 +619,31 @@ function hqr2(evd) {
                     }
 
                     t = Math.abs(H[i][n]);
-                    if ((eps * t) * t > 1)
-                        for (var j = i; j <= n; j++)
+                    if ((eps * t) * t > 1) {
+                        for (j = i; j <= n; j++) {
                             H[j][n] = H[j][n] / t;
+                        }
+                    }
                 }
             }
-        }
-        else if (q < 0) {
-            var l = n - 1;
+        } else if (q < 0) {
+            l = n - 1;
 
             if (Math.abs(H[n][n - 1]) > Math.abs(H[n - 1][n])) {
                 H[n - 1][n - 1] = q / H[n][n - 1];
                 H[n - 1][n] = -(H[n][n] - p) / H[n][n - 1];
-            }
-            else {
-                cdiv(evd, 0, -H[n - 1][n], H[n - 1][n - 1] - p, q);
-                H[n - 1][n - 1] = evd.cdivr;
-                H[n - 1][n] = evd.cdivi;
+            } else {
+                cdivres = cdiv(0, -H[n - 1][n], H[n - 1][n - 1] - p, q);
+                H[n - 1][n - 1] = cdivres[0];
+                H[n - 1][n] = cdivres[1];
             }
 
             H[n][n - 1] = 0;
             H[n][n] = 1;
-            for (var i = n - 2; i >= 0; i--) {
-                var ra, sa, vr, vi;
+            for (i = n - 2; i >= 0; i--) {
                 ra = 0;
                 sa = 0;
-                for (var j = l; j <= n; j++) {
+                for (j = l; j <= n; j++) {
                     ra = ra + H[i][j] * H[j][n - 1];
                     sa = sa + H[i][j] * H[j][n];
                 }
@@ -635,38 +654,36 @@ function hqr2(evd) {
                     z = w;
                     r = ra;
                     s = sa;
-                }
-                else {
+                } else {
                     l = i;
                     if (e[i] === 0) {
-                        cdiv(evd, -ra, -sa, w, q);
-                        H[i][n - 1] = evd.cdivr;
-                        H[i][n] = evd.cdivi;
-                    }
-                    else {
+                        cdivres = cdiv(-ra, -sa, w, q);
+                        H[i][n - 1] = cdivres[0];
+                        H[i][n] = cdivres[1];
+                    } else {
                         x = H[i][i + 1];
                         y = H[i + 1][i];
                         vr = (d[i] - p) * (d[i] - p) + e[i] * e[i] - q * q;
                         vi = (d[i] - p) * 2 * q;
-                        if (vr === 0 & vi === 0)
+                        if (vr === 0 && vi === 0) {
                             vr = eps * norm * (Math.abs(w) + Math.abs(q) + Math.abs(x) + Math.abs(y) + Math.abs(z));
-                        cdiv(evd, x * r - z * ra + q * sa, x * s - z * sa - q * ra, vr, vi);
-                        H[i][n - 1] = evd.cdivr;
-                        H[i][n] = evd.cdivi;
+                        }
+                        cdivres = cdiv(x * r - z * ra + q * sa, x * s - z * sa - q * ra, vr, vi);
+                        H[i][n - 1] = cdivres[0];
+                        H[i][n] = cdivres[1];
                         if (Math.abs(x) > (Math.abs(z) + Math.abs(q))) {
                             H[i + 1][n - 1] = (-ra - w * H[i][n - 1] + q * H[i][n]) / x;
                             H[i + 1][n] = (-sa - w * H[i][n] - q * H[i][n - 1]) / x;
-                        }
-                        else {
-                            cdiv(evd, -r - y * H[i][n - 1], -s - y * H[i][n], z, q);
-                            H[i + 1][n - 1] = evd.cdivr;
-                            H[i + 1][n] = evd.cdivi;
+                        } else {
+                            cdivres = cdiv(-r - y * H[i][n - 1], -s - y * H[i][n], z, q);
+                            H[i + 1][n - 1] = cdivres[0];
+                            H[i + 1][n] = cdivres[1];
                         }
                     }
 
                     t = Math.max(Math.abs(H[i][n - 1]), Math.abs(H[i][n]));
                     if ((eps * t) * t > 1) {
-                        for (var j = i; j <= n; j++) {
+                        for (j = i; j <= n; j++) {
                             H[j][n - 1] = H[j][n - 1] / t;
                             H[j][n] = H[j][n] / t;
                         }
@@ -676,36 +693,44 @@ function hqr2(evd) {
         }
     }
 
-    for (var i = 0; i < nn; i++)
-        if (i < low | i > high)
-            for (var j = i; j < nn; j++)
+    for (i = 0; i < nn; i++) {
+        if (i < low || i > high) {
+            for (j = i; j < nn; j++) {
                 V[i][j] = H[i][j];
+            }
+        }
+    }
 
-    for (var j = nn - 1; j >= low; j--) {
-        for (var i = low; i <= high; i++) {
+    for (j = nn - 1; j >= low; j--) {
+        for (i = low; i <= high; i++) {
             z = 0;
-            for (var k = low; k <= Math.min(j, high); k++)
+            for (k = low; k <= Math.min(j, high); k++) {
                 z = z + V[i][k] * H[k][j];
+            }
             V[i][j] = z;
         }
     }
 }
 
-function cdiv(evd, xr, xi, yr, yi) {
-    var r;
-    var d;
+function cdiv(xr, xi, yr, yi) {
+    var r, d;
     if (Math.abs(yr) > Math.abs(yi)) {
         r = yi / yr;
         d = yr + r * yi;
-        evd.cdivr = (xr + r * xi) / d;
-        evd.cdivi = (xi - r * xr) / d;
+        return [(xr + r * xi) / d, (xi - r * xr) / d];
     }
     else {
         r = yr / yi;
         d = yi + r * yr;
-        evd.cdivr = (r * xr + xi) / d;
-        evd.cdivi = (r * xi - xr) / d;
+        return [(r * xr + xi) / d, (r * xi - xr) / d];
     }
+}
+
+function EigenvalueDecompositionResult(n, e, d, V) {
+    this.n = n;
+    this.e = e;
+    this.d = d;
+    this.V = V;
 }
 
 EigenvalueDecomposition.prototype = {
@@ -719,14 +744,15 @@ EigenvalueDecomposition.prototype = {
         return this.V;
     },
     get diagonalMatrix() {
-        var n = this.n;
-        var e = this.e;
-        var d = this.d
-        var X = Matrix.empty(n, n);
-        for (var i = 0; i < n; i++) {
-            for (var j = 0; j < n; j++)
+        var n = this.n,
+            e = this.e,
+            d = this.d,
+            X = new Matrix(n, n),
+            i, j;
+        for (i = 0; i < n; i++) {
+            for (j = 0; j < n; j++) {
                 X[i][j] = 0;
-
+            }
             X[i][i] = d[i];
             if (e[i] > 0) {
                 X[i][i + 1] = e[i];
@@ -735,7 +761,6 @@ EigenvalueDecomposition.prototype = {
                 X[i][i - 1] = e[i];
             }
         }
-
         return X;
     }
 };
@@ -1041,7 +1066,7 @@ function SingularValueDecomposition(value, options) {
         wantu = false;
     if (options.computeRightSingularVectors === false)
         wantv = false;
-    var autoTranspose = options.autoTranspose === true ? true : false;
+    var autoTranspose = options.autoTranspose === true;
 
     var swapped = false;
     if (m < n) {
@@ -1474,81 +1499,81 @@ SingularValueDecomposition.prototype = {
 // https://github.com/lutzroeder/Mapack/blob/master/Source/CholeskyDecomposition.cs
 function CholeskyDecomposition(value) {
     if (!(value instanceof Matrix))
-        throw "Argument has to be a Matrix";
-    if (!value.isSquare())
-        throw "Matrix is not square";
+        throw 'Argument has to be a Matrix';
+    if (!value.isSymmetric())
+        throw 'Matrix is not symmetric';
 
-    var dimension = value.rows;
-    this.L = Matrix.empty(dimension, dimension);
+    var a = value,
+        dimension = a.rows,
+        l = new Matrix(dimension, dimension),
+        positiveDefinite = true,
+        i, j, k;
 
-    var a = value;
-    var l = this.L;
-
-    this.positiveDefinite = true;
-    this.symmetric = true;
-
-    for (var j = 0; j < dimension; j++) {
+    for (j = 0; j < dimension; j++) {
         var Lrowj = l[j];
         var d = 0;
-        for (var k = 0; k < j; k++) {
+        for (k = 0; k < j; k++) {
             var Lrowk = l[k];
             var s = 0;
-            for (var i = 0; i < k; i++) {
+            for (i = 0; i < k; i++) {
                 s += Lrowk[i] * Lrowj[i];
             }
             Lrowj[k] = s = (a[j][k] - s) / l[k][k];
             d = d + s * s;
-
-            this.symmetric = this.symmetric & (a[k][j] == a[j][k]);
         }
 
         d = a[j][j] - d;
 
-        this.positiveDefinite = this.positiveDefinite & (d > 0);
+        positiveDefinite &= (d > 0);
         l[j][j] = Math.sqrt(Math.max(d, 0));
-        for (var k = j + 1; k < dimension; k++) {
+        for (k = j + 1; k < dimension; k++) {
             l[j][k] = 0;
         }
     }
+
+    if (!positiveDefinite) {
+        throw 'Matrix is not positive definite';
+    }
+
+    return new CholeskyDecompositionResult(l);
 }
 
-CholeskyDecomposition.prototype = {
-    isSymmetric: function () {
-        return this.symmetric;
-    },
-    isPositiveDefinite: function () {
-        return this.positiveDefinite;
-    },
+function CholeskyDecompositionResult(l) {
+    this.L = l;
+}
+
+CholeskyDecompositionResult.prototype = {
     get leftTriangularFactor() {
         return this.L;
     },
     solve: function (value) {
-        if (!(value instanceof Matrix))
-            throw "Argument has to be a Matrix.";
-        if (value.rows !== this.L.rows)
-            throw "Matrix dimensions do not match.";
-        if (!this.symmetric)
-            throw "Matrix is not symmetric";
-        if (!this.positiveDefinite)
-            throw "Matrix is not positive definite";
+        if (!(value instanceof Matrix)) {
+            throw "Argument has to be a Matrix";
+        }
 
-        var dimension = this.L.rows;
-        var count = value.columns;
-        var B = value.clone()
-        var l = this.L;
+        var l = this.L,
+            dimension = l.rows;
 
-        for (var k = 0; k < dimension; k++) {
-            for (var j = 0; j < count; j++) {
-                for (var i = 0; i < k; i++) {
+        if (value.rows !== dimension) {
+            throw "Matrix dimensions do not match";
+        }
+
+        var count = value.columns,
+            B = value.clone(),
+            i, j, k;
+
+        for (k = 0; k < dimension; k++) {
+            for (j = 0; j < count; j++) {
+                for (i = 0; i < k; i++) {
                     B[k][j] -= B[i][j] * l[k][i];
                 }
                 B[k][j] /= l[k][k];
             }
         }
 
-        for (var k = dimension - 1; k >= 0; k--) {
-            for (var j = 0; j < count; j++) {
-                for (var i = k + 1; i < dimension; i++) {
+        for (k = dimension - 1; k >= 0; k--) {
+            for (j = 0; j < count; j++) {
+                for (i = k + 1; i < dimension; i++) {
                     B[k][j] -= B[i][j] * l[i][k];
                 }
                 B[k][j] /= l[k][k];
@@ -1560,15 +1585,15 @@ CholeskyDecomposition.prototype = {
 };
 
 function hypotenuse(a, b) {
+    var r;
     if (Math.abs(a) > Math.abs(b)) {
-        var r = b / a;
+        r = b / a;
         return Math.abs(a) * Math.sqrt(1 + r * r);
     }
     if (b !== 0) {
-        var r = a / b;
+        r = a / b;
         return Math.abs(b) * Math.sqrt(1 + r * r);
     }
-
     return 0;
 }
 
@@ -1582,10 +1607,15 @@ function solve(leftHandSide, rightHandSide) {
 
 module.exports = {
     LuDecomposition: LuDecomposition,
+    LU: LuDecomposition,
     QrDecomposition: QrDecomposition,
+    QR: QrDecomposition,
     SingularValueDecomposition: SingularValueDecomposition,
+    SVD: SingularValueDecomposition,
     EigenvalueDecomposition: EigenvalueDecomposition,
+    EVD: EigenvalueDecomposition,
     CholeskyDecomposition: CholeskyDecomposition,
+    CHO: CholeskyDecomposition,
     inverse: inverse,
     solve: solve
 };
