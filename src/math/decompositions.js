@@ -733,7 +733,7 @@ function EigenvalueDecompositionResult(n, e, d, V) {
     this.V = V;
 }
 
-EigenvalueDecomposition.prototype = {
+EigenvalueDecompositionResult.prototype = {
     get realEigenvalues() {
         return this.d;
     },
