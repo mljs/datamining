@@ -938,73 +938,83 @@ function QrDecomposition(value) {
     if (!(value instanceof Matrix))
         throw "Argument has to be a Matrix";
 
-    this.QR = value.clone();
-    var qr = this.QR;
-    var m = value.rows;
-    var n = value.columns;
-    this.Rdiag = new Array(n);
+    var qr = value.clone(),
+        m = value.rows,
+        n = value.columns,
+        rdiag = new Array(n),
+        i, j, k, s;
 
-    for (var k = 0; k < n; k++) {
+    for (k = 0; k < n; k++) {
         var nrm = 0;
-        for (var i = k; i < m; i++) {
+        for (i = k; i < m; i++) {
             nrm = hypotenuse(nrm, qr[i][k]);
         }
         if (nrm !== 0) {
             if (qr[k][k] < 0) {
                 nrm = -nrm;
             }
-            for (var i = k; i < m; i++) {
+            for (i = k; i < m; i++) {
                 qr[i][k] /= nrm;
             }
             qr[k][k] += 1;
-            for (var j = k + 1; j < n; j++) {
-                var s = 0;
-                for (var i = k; i < m; i++) {
+            for (j = k + 1; j < n; j++) {
+                s = 0;
+                for (i = k; i < m; i++) {
                     s += qr[i][k] * qr[i][j];
                 }
                 s = -s / qr[k][k];
-                for (var i = k; i < m; i++) {
+                for (i = k; i < m; i++) {
                     qr[i][j] += s * qr[i][k];
                 }
             }
         }
-        this.Rdiag[k] = -nrm;
+        rdiag[k] = -nrm;
     }
+
+    return new QrDecompositionResult(qr, rdiag);
 }
 
-QrDecomposition.prototype = {
+function QrDecompositionResult(qr, rdiag) {
+    this.QR = qr;
+    this.Rdiag = rdiag;
+}
+
+QrDecompositionResult.prototype = {
     solve: function (value) {
         if (!(value instanceof Matrix))
             throw "Argument has to be a Matrix";
-        if (value.rows !== this.QR.rows)
+
+        var qr = this.QR,
+            m = qr.rows;
+
+        if (value.rows !== m)
             throw "Matrix row dimensions must agree.";
         if (!this.isFullRank())
             throw "Matrix is rank deficient.";
 
-        var count = value.columns;
-        var X = value.clone();
-        var m = this.QR.rows;
-        var n = this.QR.columns;
-        var qr = this.QR;
+        var count = value.columns,
+            X = value.clone(),
+            n = qr.columns,
+            i, j, k, s;
 
-        for (var k = 0; k < n; k++) {
-            for (var j = 0; j < count; j++) {
-                var s = 0;
-                for (var i = k; i < m; i++) {
+        for (k = 0; k < n; k++) {
+            for (j = 0; j < count; j++) {
+                s = 0;
+                for (i = k; i < m; i++) {
                     s += qr[i][k] * X[i][j];
                 }
                 s = -s / qr[k][k];
-                for (var i = k; i < m; i++) {
+                for (i = k; i < m; i++) {
                     X[i][j] += s * qr[i][k];
                 }
             }
         }
-        for (var k = n - 1; k >= 0; k--) {
-            for (var j = 0; j < count; j++) {
+        for (k = n - 1; k >= 0; k--) {
+            for (j = 0; j < count; j++) {
                 X[k][j] /= this.Rdiag[k];
             }
-            for (var i = 0; i < k; i++) {
-                for (var j = 0; j < count; j++) {
+            for (i = 0; i < k; i++) {
+                for (j = 0; j < count; j++) {
                     X[i][j] -= X[k][j] * qr[i][k];
                 }
             }
@@ -1022,41 +1032,45 @@ QrDecomposition.prototype = {
         return true;
     },
     get upperTriangularFactor() {
-        var n = this.QR.columns;
-        var X = Matrix.empty(n, n);
-        var qr = this.QR;
-        for (var i = 0; i < n; i++) {
-            for (var j = 0; j < n; j++) {
-                if (i < j)
+        var qr = this.QR,
+            n = qr.columns,
+            X = new Matrix(n, n),
+            i, j;
+        for (i = 0; i < n; i++) {
+            for (j = 0; j < n; j++) {
+                if (i < j) {
                     X[i][j] = qr[i][j];
-                else if (i === j)
+                } else if (i === j) {
                     X[i][j] = this.Rdiag[i];
-                else
+                } else {
                     X[i][j] = 0;
+                }
             }
         }
         return X;
     },
     get orthogonalFactor() {
-        var rows = this.QR.rows, columns = this.QR.columns;
-        var X = Matrix.empty(rows, columns);
-        var qr = this.QR;
+        var qr = this.QR,
+            rows = qr.rows,
+            columns = qr.columns,
+            X = new Matrix(rows, columns),
+            i, j, k, s;
 
-        for (var k = columns - 1; k >= 0; k--) {
-            for (var i = 0; i < rows; i++) {
+        for (k = columns - 1; k >= 0; k--) {
+            for (i = 0; i < rows; i++) {
                 X[i][k] = 0;
             }
             X[k][k] = 1;
-            for (var j = k; j < columns; j++) {
+            for (j = k; j < columns; j++) {
                 if (qr[k][k] !== 0) {
-                    var s = 0;
-                    for (var i = k; i < rows; i++) {
+                    s = 0;
+                    for (i = k; i < rows; i++) {
                         s += qr[i][k] * X[i][j];
                     }
 
                     s = -s / qr[k][k];
 
-                    for (var i = k; i < rows; i++) {
+                    for (i = k; i < rows; i++) {
                         X[i][j] += s * qr[i][k];
                     }
                 }
@@ -1071,11 +1085,12 @@ function SingularValueDecomposition(value, options) {
     if (!(value instanceof Matrix))
         throw "Argument has to be a Matrix";
 
-    options = options ? options : {};
+    options = options || {};
 
-    var a = value.clone();
-    var m = value.rows, n = value.columns;
-    var nu = Math.min(m, n);
+    var a = value.clone(),
+        m = value.rows,
+        n = value.columns,
+        nu = Math.min(m, n);
 
     var wantu = true, wantv = true;
     if (options.computeLeftSingularVectors === false)
@@ -1088,8 +1103,7 @@ function SingularValueDecomposition(value, options) {
     if (m < n) {
         if (!autoTranspose) {
             console.warn("WARNING: Computing SVD on a matrix with more columns than rows.");
-        }
-        else {
+        } else {
             a = a.transpose();
             m = a.rows;
             n = a.columns;
@@ -1100,24 +1114,29 @@ function SingularValueDecomposition(value, options) {
         }
     }
 
-    var s = new Array(Math.min(m + 1, n));
-    var U = Matrix.zeros(m, nu);
-    var V = Matrix.zeros(n, n);
-    var e = new Array(n), work = new Array(m);
+    var s = new Array(Math.min(m + 1, n)),
+        U = Matrix.zeros(m, nu),
+        V = Matrix.zeros(n, n),
+        e = new Array(n),
+        work = new Array(m);
 
     var nct = Math.min(m - 1, n);
     var nrt = Math.max(0, Math.min(n - 2, m));
-    for (var k = 0, max = Math.max(nct, nrt); k < max; k++) {
+
+    var i, j, k, p, t, ks, f, cs, sn, max, kase,
+        scale, sp, spm1, epm1, sk, ek, b, c, shift, g;
+
+    for (k = 0, max = Math.max(nct, nrt); k < max; k++) {
         if (k < nct) {
             s[k] = 0;
-            for (var i = k; i < m; i++) {
+            for (i = k; i < m; i++) {
                 s[k] = hypotenuse(s[k], a[i][k]);
             }
             if (s[k] !== 0) {
                 if (a[k][k] < 0) {
                     s[k] = -s[k];
                 }
-                for (var i = k; i < m; i++) {
+                for (i = k; i < m; i++) {
                     a[i][k] /= s[k];
                 }
                 a[k][k] += 1;
@@ -1125,117 +1144,140 @@ function SingularValueDecomposition(value, options) {
             s[k] = -s[k];
         }
 
-        for (var j = k + 1; j < n; j++) {
-            if ((k < nct) & (s[k] !== 0)) {
-                var t = 0;
-                for (var i = k; i < m; i++)
+        for (j = k + 1; j < n; j++) {
+            if ((k < nct) && (s[k] !== 0)) {
+                t = 0;
+                for (i = k; i < m; i++) {
                     t += a[i][k] * a[i][j];
+                }
                 t = -t / a[k][k];
-                for (var i = k; i < m; i++)
+                for (i = k; i < m; i++) {
                     a[i][j] += t * a[i][k];
+                }
             }
             e[j] = a[k][j];
         }
 
-        if (wantu & (k < nct)) {
-            for (var i = k; i < m; i++)
+        if (wantu && (k < nct)) {
+            for (i = k; i < m; i++) {
                 U[i][k] = a[i][k];
+            }
         }
 
         if (k < nrt) {
             e[k] = 0;
-            for (var i = k + 1; i < n; i++) {
+            for (i = k + 1; i < n; i++) {
                 e[k] = hypotenuse(e[k], e[i]);
             }
             if (e[k] !== 0) {
                 if (e[k + 1] < 0)
                     e[k] = -e[k];
-                for (var i = k + 1; i < n; i++)
+                for (i = k + 1; i < n; i++) {
                     e[i] /= e[k];
+                }
                 e[k + 1] += 1;
             }
             e[k] = -e[k];
-            if ((k + 1 < m) & (e[k] !== 0)) {
-                for (var i = k + 1; i < m; i++)
+            if ((k + 1 < m) && (e[k] !== 0)) {
+                for (i = k + 1; i < m; i++) {
                     work[i] = 0;
-                for (var j = k + 1; j < n; j++)
-                    for (var i = k + 1; i < m; i++)
+                }
+                for (j = k + 1; j < n; j++) {
+                    for (i = k + 1; i < m; i++) {
                         work[i] += e[j] * a[i][j];
-                for (var j = k + 1; j < n; j++) {
-                    var t = -e[j] / e[k + 1];
-                    for (var i = k + 1; i < m; i++)
+                    }
+                }
+                for (j = k + 1; j < n; j++) {
+                    t = -e[j] / e[k + 1];
+                    for (i = k + 1; i < m; i++) {
                         a[i][j] += t * work[i];
+                    }
                 }
             }
             if (wantv) {
-                for (var i = k + 1; i < n; i++)
+                for (i = k + 1; i < n; i++) {
                     V[i][k] = e[i];
+                }
             }
         }
     }
 
-    var p = Math.min(n, m + 1);
-    if (nct < n) s[nct] = a[nct][nct];
-    if (m < p) s[p - 1] = 0;
-    if (nrt + 1 < p) e[nrt] = a[nrt][p - 1];
+    p = Math.min(n, m + 1);
+    if (nct < n) {
+        s[nct] = a[nct][nct];
+    }
+    if (m < p) {
+        s[p - 1] = 0;
+    }
+    if (nrt + 1 < p) {
+        e[nrt] = a[nrt][p - 1];
+    }
     e[p - 1] = 0;
 
     if (wantu) {
-        for (var j = nct; j < nu; j++) {
-            for (var i = 0; i < m; i++)
+        for (j = nct; j < nu; j++) {
+            for (i = 0; i < m; i++) {
                 U[i][j] = 0;
+            }
             U[j][j] = 1;
         }
-        for (var k = nct - 1; k >= 0; k--) {
+        for (k = nct - 1; k >= 0; k--) {
             if (s[k] !== 0) {
-                for (var j = k + 1; j < nu; j++) {
-                    var t = 0;
-                    for (var i = k; i < m; i++)
+                for (j = k + 1; j < nu; j++) {
+                    t = 0;
+                    for (i = k; i < m; i++) {
                         t += U[i][k] * U[i][j];
+                    }
                     t = -t / U[k][k];
-                    for (var i = k; i < m; i++)
+                    for (i = k; i < m; i++) {
                         U[i][j] += t * U[i][k];
+                    }
                 }
-                for (var i = k; i < m; i++)
+                for (i = k; i < m; i++) {
                     U[i][k] = -U[i][k];
+                }
                 U[k][k] = 1 + U[k][k];
-                for (var i = 0; i < k - 1; i++)
+                for (i = 0; i < k - 1; i++) {
                     U[i][k] = 0;
-            }
-            else {
-                for (var i = 0; i < m; i++)
+                }
+            } else {
+                for (i = 0; i < m; i++) {
                     U[i][k] = 0;
+                }
                 U[k][k] = 1;
             }
         }
     }
 
     if (wantv) {
-        for (var k = n - 1; k >= 0; k--) {
-            if ((k < nrt) & (e[k] !== 0)) {
-                for (var j = k + 1; j < n; j++) {
-                    var t = 0;
-                    for (var i = k + 1; i < n; i++)
+        for (k = n - 1; k >= 0; k--) {
+            if ((k < nrt) && (e[k] !== 0)) {
+                for (j = k + 1; j < n; j++) {
+                    t = 0;
+                    for (i = k + 1; i < n; i++) {
                         t += V[i][k] * V[i][j];
+                    }
                     t = -t / V[k + 1][k];
-                    for (var i = k + 1; i < n; i++)
+                    for (i = k + 1; i < n; i++) {
                         V[i][j] += t * V[i][k];
+                    }
                 }
             }
-            for (var i = 0; i < n; i++)
+            for (i = 0; i < n; i++) {
                 V[i][k] = 0;
+            }
             V[k][k] = 1;
         }
     }
 
-    var pp = p - 1;
-    var iter = 0;
-    var eps = Math.pow(2, -52);
+    var pp = p - 1,
+        iter = 0,
+        eps = Math.pow(2, -52);
     while (p > 0) {
-        var k, kase;
         for (k = p - 2; k >= -1; k--) {
-            if (k === -1)
+            if (k === -1) {
                 break;
+            }
             if (Math.abs(e[k]) <= eps * (Math.abs(s[k]) + Math.abs(s[k + 1]))) {
                 e[k] = 0;
                 break;
@@ -1243,23 +1285,22 @@ function SingularValueDecomposition(value, options) {
         }
         if (k === p - 2) {
             kase = 4;
-        }
-        else {
-            var ks;
+        } else {
             for (ks = p - 1; ks >= k; ks--) {
-                if (ks === k)
+                if (ks === k) {
                     break;
-                var t = (ks !== p ? Math.abs(e[ks]) : 0) + (ks !== k + 1 ? Math.abs(e[ks - 1]) : 0);
+                }
+                t = (ks !== p ? Math.abs(e[ks]) : 0) + (ks !== k + 1 ? Math.abs(e[ks - 1]) : 0);
                 if (Math.abs(s[ks]) <= eps * t) {
                     s[ks] = 0;
                     break;
                 }
             }
-            if (ks === k)
+            if (ks === k) {
                 kase = 3;
-            else if (ks === p - 1)
+            } else if (ks === p - 1) {
                 kase = 1;
-            else {
+            } else {
                 kase = 2;
                 k = ks;
             }
@@ -1268,81 +1309,80 @@ function SingularValueDecomposition(value, options) {
         k++;
 
         switch (kase) {
-            case 1:
-            {
-                var f = e[p - 2];
+            case 1: {
+                f = e[p - 2];
                 e[p - 2] = 0;
-                for (var j = p - 2; j >= k; j--) {
-                    var t = hypotenuse(s[j], f);
-                    var cs = s[j] / t;
-                    var sn = f / t;
+                for (j = p - 2; j >= k; j--) {
+                    t = hypotenuse(s[j], f);
+                    cs = s[j] / t;
+                    sn = f / t;
                     s[j] = t;
                     if (j !== k) {
                         f = -sn * e[j - 1];
                         e[j - 1] = cs * e[j - 1];
                     }
                     if (wantv) {
-                        for (var i = 0; i < n; i++) {
+                        for (i = 0; i < n; i++) {
                             t = cs * V[i][j] + sn * V[i][p - 1];
                             V[i][p - 1] = -sn * V[i][j] + cs * V[i][p - 1];
                             V[i][j] = t;
                         }
                     }
                 }
-            }
                 break;
-            case 2 :
-            {
-                var f = e[k - 1];
+            }
+            case 2 : {
+                f = e[k - 1];
                 e[k - 1] = 0;
-                for (var j = k; j < p; j++) {
-                    var t = hypotenuse(s[j], f);
-                    var cs = s[j] / t;
-                    var sn = f / t;
+                for (j = k; j < p; j++) {
+                    t = hypotenuse(s[j], f);
+                    cs = s[j] / t;
+                    sn = f / t;
                     s[j] = t;
                     f = -sn * e[j];
                     e[j] = cs * e[j];
                     if (wantu) {
-                        for (var i = 0; i < m; i++) {
+                        for (i = 0; i < m; i++) {
                             t = cs * U[i][j] + sn * U[i][k - 1];
                             U[i][k - 1] = -sn * U[i][j] + cs * U[i][k - 1];
                             U[i][j] = t;
                         }
                     }
                 }
-            }
                 break;
-            case 3 :
-            {
-                var scale = Math.max(Math.max(Math.max(Math.max(Math.abs(s[p - 1]), Math.abs(s[p - 2])), Math.abs(e[p - 2])), Math.abs(s[k])), Math.abs(e[k]));
-                var sp = s[p - 1] / scale;
-                var spm1 = s[p - 2] / scale;
-                var epm1 = e[p - 2] / scale;
-                var sk = s[k] / scale;
-                var ek = e[k] / scale;
-                var b = ((spm1 + sp) * (spm1 - sp) + epm1 * epm1) / 2;
-                var c = (sp * epm1) * (sp * epm1);
-                var shift = 0;
-                if ((b !== 0) | (c !== 0)) {
+            }
+            case 3 : {
+                scale = Math.max(Math.max(Math.max(Math.max(Math.abs(s[p - 1]), Math.abs(s[p - 2])), Math.abs(e[p - 2])), Math.abs(s[k])), Math.abs(e[k]));
+                sp = s[p - 1] / scale;
+                spm1 = s[p - 2] / scale;
+                epm1 = e[p - 2] / scale;
+                sk = s[k] / scale;
+                ek = e[k] / scale;
+                b = ((spm1 + sp) * (spm1 - sp) + epm1 * epm1) / 2;
+                c = (sp * epm1) * (sp * epm1);
+                shift = 0;
+                if ((b !== 0) || (c !== 0)) {
                     shift = Math.sqrt(b * b + c);
-                    if (b < 0)
+                    if (b < 0) {
                         shift = -shift;
+                    }
                     shift = c / (b + shift);
                 }
-                var f = (sk + sp) * (sk - sp) + shift;
-                var g = sk * ek;
-                for (var j = k; j < p - 1; j++) {
-                    var t = hypotenuse(f, g);
-                    var cs = f / t;
-                    var sn = g / t;
-                    if (j !== k)
+                f = (sk + sp) * (sk - sp) + shift;
+                g = sk * ek;
+                for (j = k; j < p - 1; j++) {
+                    t = hypotenuse(f, g);
+                    cs = f / t;
+                    sn = g / t;
+                    if (j !== k) {
                         e[j - 1] = t;
+                    }
                     f = cs * s[j] + sn * e[j];
                     e[j] = cs * e[j] - sn * s[j];
                     g = sn * s[j + 1];
                     s[j + 1] = cs * s[j + 1];
                     if (wantv) {
-                        for (var i = 0; i < n; i++) {
+                        for (i = 0; i < n; i++) {
                             t = cs * V[i][j] + sn * V[i][j + 1];
                             V[i][j + 1] = -sn * V[i][j] + cs * V[i][j + 1];
                             V[i][j] = t;
@@ -1357,7 +1397,7 @@ function SingularValueDecomposition(value, options) {
                     g = sn * e[j + 1];
                     e[j + 1] = cs * e[j + 1];
                     if (wantu && (j < m - 1)) {
-                        for (var i = 0; i < m; i++) {
+                        for (i = 0; i < m; i++) {
                             t = cs * U[i][j] + sn * U[i][j + 1];
                             U[i][j + 1] = -sn * U[i][j] + cs * U[i][j + 1];
                             U[i][j] = t;
@@ -1366,56 +1406,65 @@ function SingularValueDecomposition(value, options) {
                 }
                 e[p - 2] = f;
                 iter = iter + 1;
-            }
                 break;
-            case 4:
-            {
+            }
+            case 4: {
                 if (s[k] <= 0) {
                     s[k] = (s[k] < 0 ? -s[k] : 0);
-                    if (wantv)
-                        for (var i = 0; i <= pp; i++)
+                    if (wantv) {
+                        for (i = 0; i <= pp; i++) {
                             V[i][k] = -V[i][k];
+                        }
+                    }
                 }
                 while (k < pp) {
-                    if (s[k] >= s[k + 1])
+                    if (s[k] >= s[k + 1]) {
                         break;
-                    var t = s[k];
+                    }
+                    t = s[k];
                     s[k] = s[k + 1];
                     s[k + 1] = t;
-                    if (wantv && (k < n - 1))
-                        for (var i = 0; i < n; i++) {
+                    if (wantv && (k < n - 1)) {
+                        for (i = 0; i < n; i++) {
                             t = V[i][k + 1];
                             V[i][k + 1] = V[i][k];
                             V[i][k] = t;
                         }
-                    if (wantu && (k < m - 1))
-                        for (var i = 0; i < m; i++) {
+                    }
+                    if (wantu && (k < m - 1)) {
+                        for (i = 0; i < m; i++) {
                             t = U[i][k + 1];
                             U[i][k + 1] = U[i][k];
                             U[i][k] = t;
                         }
+                    }
                     k++;
                 }
                 iter = 0;
                 p--;
-            }
                 break;
+            }
         }
     }
 
+    if (swapped) {
+        var tmp = V;
+        V = U;
+        U = tmp;
+    }
+
+    return new SingularValueDecompositionResult(m, n, s, U, V);
+}
+
+function SingularValueDecompositionResult(m, n, s, U, V) {
     this.m = m;
     this.n = n;
     this.s = s;
-    if (swapped) {
-        this.U = V;
-        this.V = U;
-    } else {
-        this.U = U;
-        this.V = V;
-    }
+    this.U = U;
+    this.V = V;
 }
 
-SingularValueDecomposition.prototype = {
+SingularValueDecompositionResult.prototype = {
     get condition() {
         return this.s[0] / this.s[Math.min(this.m, this.n) - 1];
     },
@@ -1423,13 +1472,14 @@ SingularValueDecomposition.prototype = {
         return this.s[0];
     },
     get rank() {
-        var eps = Math.pow(2, -52);
-        var tol = Math.max(this.m, this.n) * this.s[0] * eps;
-        var r = 0;
-        var s = this.s;
+        var eps = Math.pow(2, -52),
+            tol = Math.max(this.m, this.n) * this.s[0] * eps,
+            r = 0,
+            s = this.s;
         for (var i = 0, ii = s.length; i < ii; i++) {
-            if (s[i] > tol)
+            if (s[i] > tol) {
                 r++;
+            }
         }
         return r;
     },
@@ -1451,29 +1501,32 @@ SingularValueDecomposition.prototype = {
     },
     solve: function (value) {
 
-        var Y = value;
-        var e = this.threshold;
-        var scols = this.s.length;
+        var Y = value,
+            e = this.threshold,
+            scols = this.s.length,
+            Ls = Matrix.zeros(scols, scols),
+            i;
 
-        var Ls = Matrix.zeros(scols, scols);
-
-        for (var i = 0; i < scols; i++) {
-            if (Math.abs(this.s[i]) <= e)
+        for (i = 0; i < scols; i++) {
+            if (Math.abs(this.s[i]) <= e) {
                 Ls[i][i] = 0;
+            }
             else Ls[i][i] = 1 / this.s[i];
         }
 
 
-        var VL = this.V.mmul(Ls);
+        var VL = this.V.mmul(Ls),
+            vrows = this.V.rows,
+            urows = this.U.rows,
+            VLU = Matrix.zeros(vrows, urows),
+            j, k, sum;
 
-        var vrows = this.V.rows;
-        var urows = this.U.rows;
-        var VLU = Matrix.zeros(vrows, urows);
-        for (var i = 0; i < vrows; i++) {
-            for (var j = 0; j < urows; j++) {
-                var sum = 0;
-                for (var k = 0; k < scols; k++)
+        for (i = 0; i < vrows; i++) {
+            for (j = 0; j < urows; j++) {
+                sum = 0;
+                for (k = 0; k < scols; k++) {
                     sum += VL[i][k] * this.U[j][k];
+                }
                 VLU[i][j] = sum;
             }
         }
@@ -1484,26 +1537,31 @@ SingularValueDecomposition.prototype = {
         return this.solve(Matrix.diag(value));
     },
     inverse: function () {
-        var e = this.threshold;
+        var e = this.threshold,
+            vrows = this.V.rows,
+            vcols = this.V.columns,
+            X = new Matrix(vrows, this.s.length),
+            i, j;
 
-        var vrows = this.V.rows,
-            vcols = this.V.columns;
-        var X = Matrix.zeros(vrows, this.s.length);
-        for (var i = 0; i < vrows; i++) {
-            for (var j = 0; j < vcols; j++) {
-                if (Math.abs(this.s[j]) > e)
+        for (i = 0; i < vrows; i++) {
+            for (j = 0; j < vcols; j++) {
+                if (Math.abs(this.s[j]) > e) {
                     X[i][j] = this.V[i][j] / this.s[j];
+                }
             }
         }
 
         var urows = this.U.rows,
-            ucols = this.U.columns;
-        var Y = Matrix.zeros(vrows, urows);
-        for (var i = 0; i < vrows; i++) {
-            for (var j = 0; j < urows; j++) {
-                var sum = 0;
-                for (var k = 0; k < ucols; k++)
+            ucols = this.U.columns,
+            Y = new Matrix(vrows, urows),
+            k, sum;
+
+        for (i = 0; i < vrows; i++) {
+            for (j = 0; j < urows; j++) {
+                sum = 0;
+                for (k = 0; k < ucols; k++) {
                     sum += X[i][k] * this.U[j][k];
+                }
                 Y[i][j] = sum;
             }
         }
